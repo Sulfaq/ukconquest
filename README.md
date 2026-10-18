@@ -9,7 +9,7 @@ A real-time conquest game for 2 to 4 mates on a map of the UK. Drag troops betwe
 - **Drag** from one of your cities to another city to send half its troops.
 - **Drag through several** of your cities on the way to chain them: they all send at once.
 - Troops can travel through your own cities, but not through anyone else's.
-- **Tap** one of your cities to upgrade it (levels 1 to 3). It costs troops from that city: 20 for level 2, 40 for level 3.
+- **Tap** one of your cities to upgrade it (levels 1 to 3). It costs troops from that city: 35 for level 2, 70 for level 3.
 
 ## How it's built
 

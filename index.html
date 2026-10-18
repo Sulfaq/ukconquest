@@ -94,7 +94,7 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 <script id="config">
 'use strict';
 const CONFIG = {
-  version: '0.3',
+  version: '0.3.1',
   maxPlayers: 4,
   minPlayers: 2,              // the host can still start alone for a practice run
   modes: { ffa: 'Free for all', teams: '2 v 2' },
@@ -108,7 +108,7 @@ const CONFIG = {
   production: { L: 1.0, M: 0.6, S: 0.35 },   // troops per second at level 1
   cap: { L: 60, M: 50, S: 40 },              // troop cap at level 1 (production stops here)
   maxLevel: 3,
-  upgradeCost: [0, 0, 20, 40],               // troops from the city's garrison to reach level 2, 3
+  upgradeCost: [0, 0, 35, 70],               // troops from the city's garrison to reach level 2, 3
   levelProduction: [0, 1, 1.5, 2],           // production multiplier by level
   levelCap: [0, 1, 5 / 3, 2.5],              // cap multiplier by level (60 / 100 / 150 for a large city)
   startGarrison: 20,          // each player's own starting cities

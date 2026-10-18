@@ -308,16 +308,18 @@ test('end screen stats count captures, troops sent and peak cities', () => {
 // ---- M3: upgrades ----
 test('upgrade: costs troops from the garrison, one level at a time, up to level 3', () => {
   const g = game();
-  g.cities[I.london].n = 20;
-  assert.strictEqual(Sim.upgradeProblem(g, 'amy', I.london), 'troops', '20 troops cannot pay 20 and keep one');
-  g.cities[I.london].n = 21;
+  const [, , c2, c3] = CONFIG.upgradeCost;
+  g.cities[I.london].n = c2;
+  assert.strictEqual(Sim.upgradeProblem(g, 'amy', I.london), 'troops', 'must pay the cost and keep one');
+  g.cities[I.london].n = c2 + 1;
   assert(Sim.upgrade(g, 'amy', I.london));
   assert.strictEqual(g.cities[I.london].lv, 2);
   assert.strictEqual(g.cities[I.london].n, 1);
-  g.cities[I.london].n = 50;
+  g.cities[I.london].n = c3 + 10;
   assert(Sim.upgrade(g, 'amy', I.london));
   assert.strictEqual(g.cities[I.london].lv, 3);
   assert.strictEqual(g.cities[I.london].n, 10);
+  g.cities[I.london].n = 100;
   g.cities[I.london].n = 100;
   assert.strictEqual(Sim.upgradeProblem(g, 'amy', I.london), 'max');
   assert(!Sim.upgrade(g, 'amy', I.london));
