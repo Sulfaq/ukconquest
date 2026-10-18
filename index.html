@@ -82,13 +82,20 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 .overlay .box { background: var(--bg); border: 3px solid var(--ink); border-radius: 22px; padding: 22px; max-width: 360px; width: 100%; box-shadow: var(--sticker); display: flex; flex-direction: column; gap: 12px; text-align: center; }
 .toast { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(31, 42, 51, 0.85); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 15px; font-weight: 700; pointer-events: none; white-space: nowrap; }
 .toast:empty { display: none; }
-.news { position: absolute; left: 50%; top: 10px; transform: translate(-50%, -140%); width: min(92%, 380px); background: var(--ink); color: #fff; border-radius: 16px; padding: 10px 14px; font-weight: 800; font-size: 16px; line-height: 1.3; text-align: center; box-shadow: var(--sticker); transition: transform 0.35s cubic-bezier(.2,1.4,.4,1); pointer-events: none; }
+.news { position: absolute; left: 50%; top: 10px; transform: translate(-50%, calc(-100% - 40px)); width: min(92%, 380px); background: var(--ink); color: #fff; border-radius: 16px; padding: 10px 14px; font-weight: 800; font-size: 16px; line-height: 1.3; text-align: center; box-shadow: var(--sticker); transition: transform 0.35s cubic-bezier(.2,1.4,.4,1); pointer-events: none; }
 .news.show { transform: translate(-50%, 0); }
 .news .big { display: block; font-size: 26px; }
 .chaosbar { position: absolute; left: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
 .chaosbar span { background: rgba(255,255,255,0.92); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 9px; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .toggle { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 800; }
 .toggle button { min-height: 44px; padding: 6px 16px; }
+.powers { position: absolute; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); display: flex; gap: 8px; align-items: flex-end; }
+.powers button { width: 58px; height: 58px; min-height: 58px; padding: 0; border-radius: 18px; font-size: 26px; line-height: 1; display: grid; place-items: center; }
+.powers button small { display: block; font-size: 10px; font-weight: 800; margin-top: -2px; }
+.powers button.armed { background: var(--ink); color: #fff; transform: translateY(-4px); }
+.powers .charge { display: flex; gap: 3px; padding: 6px 8px; background: rgba(255,255,255,0.9); border: 2px solid var(--ink); border-radius: 999px; align-items: center; }
+.powers .charge i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink); display: inline-block; }
+.powers .charge i.on { background: var(--ink); }
 </style>
 </head>
 <body>
@@ -101,10 +108,17 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 <script id="config">
 'use strict';
 const CONFIG = {
-  version: '0.5',
+  version: '0.6',
   maxPlayers: 4,
   minPlayers: 2,              // the host can still start alone for a practice run
   modes: { ffa: 'Free for all', teams: '2 v 2' },
+  powerups: {                 // earned by capturing cities, held in two slots, used with a tap
+    capturesPerPowerup: 3,
+    maxHeld: 2,
+    speed: { seconds: 10, factor: 2 },       // your troops sent in this window travel twice as fast
+    shield: { seconds: 15 },                 // one of your cities can't be hurt by enemy troops
+    sabotage: { seconds: 10 },               // one enemy city stops producing
+  },
   chaos: {                    // random UK-flavoured events; the host can switch them off in the lobby
     firstAfterSeconds: 60,
     gapSeconds: [40, 70],     // random gap between events
@@ -343,7 +357,8 @@ const Sim = (() => {
     g.cities = MAP.cities.map(c => ({ o: -1, n: CONFIG.neutralGarrison[c.size], lv: 1 }));
     for (const p of ps) {
       p.out = false;
-      p.stats = { taken: 0, lost: 0, sent: 0, upgrades: 0, peak: 3, gifted: 0, low: 3, comeback: 0 };
+      p.powers = []; p.charge = 0; p.speedUntil = 0;
+      p.stats = { powerups: 0, taken: 0, lost: 0, sent: 0, upgrades: 0, peak: 3, gifted: 0, low: 3, comeback: 0 };
       for (const cid of MAP.slots[p.slot].cities) g.cities[IDX[cid]] = { o: p.idx, n: CONFIG.startGarrison, lv: 1 };
     }
     g.chaosOn = []; g.nextChaosAt = CONFIG.chaos.firstAfterSeconds * 1000;
@@ -418,13 +433,50 @@ const Sim = (() => {
       if (!r) continue;
       c.n -= n;
       p.stats.sent += n;
-      g.fleets.push({ id: g.nextFleet++, o: p.idx, n, path: r.path, t0: g.t, t1: g.t + Math.round(r.len / CONFIG.travelSpeed * 1000) });
+      g.fleets.push({ id: g.nextFleet++, o: p.idx, n, path: r.path, t0: g.t, t1: g.t + Math.round(r.len / (CONFIG.travelSpeed * speedOf(g, p)) * 1000) });
       sent = true;
     }
     return sent;
   }
 
   function event(g, e) { e.id = g.nextEvent++; e.t = g.t; g.events.push(e); }
+
+  // ---- power-ups ----
+  const POWERS = ['speed', 'shield', 'sabotage'];
+  const speedOf = (g, p) => (p.speedUntil > g.t ? CONFIG.powerups.speed.factor : 1);
+  const shielded = (g, c) => (c.shieldUntil || 0) > g.t;
+  const sabotaged = (g, c) => (c.frozenUntil || 0) > g.t;
+  // Every few captures earns a random power-up, while there's room to hold it.
+  function earn(g, p, rand = Math.random) {
+    const P = CONFIG.powerups;
+    if (p.powers.length >= P.maxHeld) return;
+    if (++p.charge < P.capturesPerPowerup) return;
+    p.charge = 0;
+    const kind = POWERS[Math.floor(rand() * POWERS.length)];
+    p.powers.push(kind);
+    event(g, { k: 'power', o: p.idx, kind });
+  }
+  // Intent: use the power-up in slot `slot`, on city `target` where it needs one. Returns true if used.
+  function usePower(g, id, slot, target) {
+    const p = g.players[id];
+    if (g.phase !== 'play' || !p || p.out || !Array.isArray(p.powers)) return false;
+    const kind = p.powers[slot];
+    if (!kind) return false;
+    const P = CONFIG.powerups;
+    const c = g.cities[Number(target)];
+    if (kind === 'speed') p.speedUntil = g.t + P.speed.seconds * 1000;
+    else if (kind === 'shield') {
+      if (!c || c.o !== p.idx) return false;
+      c.shieldUntil = g.t + P.shield.seconds * 1000;
+    } else if (kind === 'sabotage') {
+      if (!c || c.o < 0 || allied(g, c.o, p.idx)) return false;
+      c.frozenUntil = g.t + P.sabotage.seconds * 1000;
+    } else return false;
+    p.powers.splice(slot, 1);
+    p.stats.powerups++;
+    event(g, { k: 'used', o: p.idx, kind, c: kind === 'speed' ? undefined : Number(target), on: c ? c.o : undefined });
+    return true;
+  }
 
   function arrive(g, f) {
     const ci = f.path[f.path.length - 1], c = g.cities[ci];
@@ -434,12 +486,13 @@ const Sim = (() => {
       if (c.o !== f.o) { const p = byIdx(g, f.o); if (p) p.stats.gifted += f.n; }
       return;
     }
+    if (shielded(g, c)) { event(g, { k: 'bounce', c: ci, o: c.o, by: f.o }); return; }   // troops bounce off
     const def = c.n * CONFIG.defenderBonus;
     if (f.n > def) {
       const was = c.o;
-      c.o = f.o; c.n = f.n - def;
+      c.o = f.o; c.n = f.n - def; c.frozenUntil = 0; c.shieldUntil = 0;
       const p = byIdx(g, f.o), q = byIdx(g, was);
-      if (p) p.stats.taken++;
+      if (p) { p.stats.taken++; earn(g, p); }
       if (q) q.stats.lost++;
       event(g, { k: 'cap', c: ci, o: f.o, was });
     } else {
@@ -465,7 +518,7 @@ const Sim = (() => {
       const c = g.cities[i];
       if (c.o < 0) return;
       const p = own[c.o];
-      if (!p || frozen(g, p)) return;
+      if (!p || frozen(g, p) || sabotaged(g, c)) return;
       const cap = cityCap(g, i);
       if (c.n < cap) c.n = Math.min(cap, c.n + CONFIG.production[m.size] * CONFIG.levelProduction[c.lv || 1] * chaosProduction(g, i) * boost * dt);
     });
@@ -556,15 +609,16 @@ const Sim = (() => {
       end: CONFIG.matchSeconds * 1000, ot: overtime(g), problem: g.phase === 'lobby' ? startProblem(g) : '',
       players: list(g).map(p => ({
         id: p.id, name: p.name, idx: p.idx, team: p.team, colour: colourOf(g, p), connected: p.connected, frozen: frozen(g, p), out: !!p.out,
+        powers: p.powers || [], charge: p.charge || 0, fast: !!p.speedUntil && p.speedUntil > g.t,
         cities: owned[p.idx] || 0, stats: g.phase === 'over' ? p.stats : undefined,
       })),
-      c: g.cities.map(c => [c.o, Math.floor(c.n), c.lv || 1]),
+      c: g.cities.map(c => [c.o, Math.floor(c.n), c.lv || 1, shielded(g, c) ? 1 : 0, sabotaged(g, c) ? 1 : 0]),
       f: g.fleets.map(f => [f.id, f.o, f.n, f.t0, f.t1, f.path]),
       ev: g.events.map(e => Object.assign({}, e)),
     };
   }
 
-  return { setMap, map, adj, linkLen, route, createGame, setChaos, chaos, blocked, addPlayer, setConnected, setMode, setTeam, upgrade, upgradeProblem, cityCap, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
+  return { setMap, map, adj, linkLen, route, createGame, setChaos, chaos, blocked, usePower, earn, addPlayer, setConnected, setMode, setTeam, upgrade, upgradeProblem, cityCap, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
 })();
 </script>
 
@@ -751,6 +805,7 @@ const Net = (() => {
       if (msg.t === 'send' && Sim.send(game, id, msg.from, msg.to)) broadcast();
       else if (msg.t === 'team' && Sim.setTeam(game, id, msg.team)) broadcast();
       else if (msg.t === 'up' && Sim.upgrade(game, id, msg.c)) broadcast();
+      else if (msg.t === 'power' && Sim.usePower(game, id, msg.s, msg.c)) broadcast();
     }
 
     function onClose(conn) {
@@ -794,6 +849,7 @@ const Net = (() => {
       else if (type === 'mode') ok = Sim.setMode(game, data);
       else if (type === 'team') ok = Sim.setTeam(game, meId, data);
       else if (type === 'upgrade') ok = Sim.upgrade(game, meId, data);
+      else if (type === 'power') ok = Sim.usePower(game, meId, data.slot, data.target);
       else if (type === 'shuffle') ok = Sim.shuffleTeams(game);
       else if (type === 'chaos') ok = Sim.setChaos(game, data);
       if (ok) broadcast();
@@ -848,6 +904,7 @@ const Net = (() => {
       if (type === 'send') conn.send({ t: 'send', from: data.from, to: data.to });
       else if (type === 'team') conn.send({ t: 'team', team: data });
       else if (type === 'upgrade') conn.send({ t: 'up', c: data });
+      else if (type === 'power') conn.send({ t: 'power', s: data.slot, c: data.target });
     }
     banner(`Joining ${code}…`);
     connect();
@@ -976,6 +1033,7 @@ const Net = (() => {
     else if (a === 'team') session.act('team', +b.dataset.team);
     else if (a === 'shuffle') session.act('shuffle');
     else if (a === 'chaos') session.act('chaos', !snap.chaos);
+    else if (a === 'power') Game.pressPower(+b.dataset.slot);
     else if (a === 'leave') toMenu();
     else if (a === 'mute') b.textContent = Sound.toggle() ? '🔇' : '🔊';
     else if (a === 'share') {
@@ -1041,7 +1099,7 @@ const Net = (() => {
     function build() {
       $app.innerHTML = `<div class="game">
         <div class="topbar"><span class="timer">0:00</span><button class="ghost" data-act="mute" style="min-height:32px;padding:0 4px;font-size:18px">${Sound.muted ? '🔇' : '🔊'}</button><div class="chips"></div></div>
-        <div class="board"><canvas></canvas><div class="chaosbar"></div><div class="news"></div><div class="toast"></div></div>
+        <div class="board"><canvas></canvas><div class="chaosbar"></div><div class="powers"></div><div class="news"></div><div class="toast"></div></div>
       </div>`;
       G.el = $app.querySelector('.game');
       cv = G.el.querySelector('canvas');
@@ -1209,10 +1267,62 @@ const Net = (() => {
     function down(e) {
       if (!snap || snap.phase !== 'play' || (meP() && meP().out)) return;
       const pt = toMap(e), i = hit(pt);
+      if (armed) { aimPower(i); return; }
       if (i < 0 || !mine(i)) return;
       try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic or already released */ }
       drag = { chain: [i], x: pt.x, y: pt.y, target: -1, sx: e.clientX, sy: e.clientY, at: performance.now(), wandered: false };
     }
+    // ---- power-ups: speed fires at once; shield and sabotage wait for you to tap a city ----
+    const POWER = {
+      speed: { icon: '⚡', name: 'Speed', hint: '' },
+      shield: { icon: '🛡️', name: 'Shield', hint: 'Tap one of your cities to shield it' },
+      sabotage: { icon: '🔧', name: 'Sabotage', hint: 'Tap an enemy city to stop its production' },
+    };
+    let armed = null;   // { slot, kind }
+    function pressPower(slot) {
+      const p = meP();
+      if (!p || !snap || snap.phase !== 'play') return;
+      const kind = p.powers[slot];
+      if (!kind) return;
+      if (armed && armed.slot === slot) { armed = null; toast('Cancelled'); renderPowers(true); return; }
+      if (kind === 'speed') {
+        session.act('power', { slot });
+        Sound.play('upgrade'); buzz(20);
+        toast(`⚡ Troops you send go twice as fast for ${CONFIG.powerups.speed.seconds}s`);
+        return;
+      }
+      armed = { slot, kind };
+      toast(POWER[kind].hint);
+      renderPowers(true);
+    }
+    function aimPower(i) {
+      const { slot, kind } = armed;
+      armed = null;
+      renderPowers(true);
+      if (i < 0) { toast('Cancelled'); return; }
+      const o = snap.c[i][0];
+      if (kind === 'shield' && o !== meIdx()) { toast('Shields only go on your own cities'); return; }
+      if (kind === 'sabotage' && (o < 0 || friendly(o))) { toast('Sabotage only works on an enemy city'); return; }
+      session.act('power', { slot, target: i });
+      Sound.play('upgrade'); buzz(20);
+    }
+    let powersKey = '';
+    function renderPowers(force) {
+      const p = meP(), el = G.el && G.el.querySelector('.powers');
+      if (!el) return;
+      const live = !!p && snap.phase === 'play' && !p.out;
+      const key = live ? JSON.stringify([p.powers, p.charge, armed]) : '';
+      if (!force && key === powersKey) return;
+      powersKey = key;
+      if (!live) { el.innerHTML = ''; return; }
+      const need = CONFIG.powerups.capturesPerPowerup;
+      const charge = p.powers.length < CONFIG.powerups.maxHeld
+        ? `<span class="charge" title="Captures until the next power-up">${Array.from({ length: need }, (_, k) => `<i class="${k < p.charge ? 'on' : ''}"></i>`).join('')}</span>`
+        : '';
+      el.innerHTML = charge + p.powers.map((k, slot) =>
+        `<button data-act="power" data-slot="${slot}" class="${armed && armed.slot === slot ? 'armed' : ''}" aria-label="${POWER[k].name}">${POWER[k].icon}<small>${POWER[k].name}</small></button>`).join('');
+    }
+
     // A quick tap on your own city (no drag) upgrades it.
     function tapUpgrade(i) {
       const [, n, lv] = snap.c[i];
@@ -1314,6 +1424,8 @@ const Net = (() => {
       const bar = (s.on || []).map(e => `<span>${CHAOS_ICON[e.k] || ''} ${CHAOS_NAME[e.k] || e.k} ${Math.max(0, Math.ceil((e.until - s.t) / 1000))}s</span>`).join('');
       const $bar = G.el.querySelector('.chaosbar');
       if ($bar.innerHTML !== bar) $bar.innerHTML = bar;
+      if (s.phase !== 'play') armed = null;
+      renderPowers();
 
       if (prev && prev.phase === 'play') {
         for (const e of s.ev) {
@@ -1324,6 +1436,14 @@ const Net = (() => {
             if (fx.length > 12) fx.shift();
             if (e.o === me) { Sound.play('capture'); buzz(30); }
             else if (e.was === me) { Sound.play('lost'); buzz([60, 40, 60]); }
+          } else if (e.k === 'power' && e.o === me) {
+            toast(`New power-up: ${POWER[e.kind].icon} ${POWER[e.kind].name}`); Sound.play('capture'); buzz([20, 30, 20]);
+          } else if (e.k === 'used' && e.kind === 'sabotage' && e.on === me) {
+            toast(`🔧 Sabotage! ${cities[e.c].name} has stopped producing`); Sound.play('lost'); buzz([60, 40, 60]);
+          } else if (e.k === 'bounce') {
+            const c = cities[e.c];
+            fx.push({ x: c.x, y: c.y, colour: '#ffffff', at: performance.now() });
+            if (e.by === me) toast(`🛡️ ${c.name} is shielded. Your troops bounced off`);
           } else if (e.k === 'chaos') {
             news(e.kind, e.text);
             if (e.c !== undefined) { const c = cities[e.c]; fx.push({ x: c.x, y: c.y, colour: '#c8102e', at: performance.now() }); }
@@ -1474,6 +1594,18 @@ const Net = (() => {
         c.strokeStyle = drag && drag.chain.includes(i) ? '#1f2a33' : '#fff'; c.stroke();
         const p = o >= 0 && snap.players.find(q => q.idx === o);
         if (p && p.frozen) { c.fillStyle = 'rgba(255,255,255,0.45)'; c.fill(); }
+        const [, , , shield, sabot] = snap.c[i] || [];
+        if (sabot) { c.fillStyle = 'rgba(160,200,230,0.6)'; c.fill(); }
+        if (shield) {   // a bright double ring
+          c.strokeStyle = '#fff'; c.lineWidth = 3;
+          c.beginPath(); c.arc(x, y, r + 5, 0, Math.PI * 2); c.stroke();
+          c.strokeStyle = '#56B4E9'; c.lineWidth = 2;
+          c.beginPath(); c.arc(x, y, r + 8, 0, Math.PI * 2); c.stroke();
+        }
+        if (armed) {   // where the armed power-up can go
+          const ok = armed.kind === 'shield' ? o === me : o >= 0 && !friendly(o);
+          if (ok) { c.strokeStyle = '#1f2a33'; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, y, r + 11, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
+        }
         c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
         c.font = numFont(Math.max(12, r * (n >= 100 ? 0.8 : 0.95)));
         c.fillText(n, x, y + 1);
@@ -1496,7 +1628,7 @@ const Net = (() => {
       });
     }
 
-    return Object.assign(G, { build, teardown, update });
+    return Object.assign(G, { build, teardown, update, pressPower });
   })();
 
   // A refresh brings you back: the host re-opens the same room, a player rejoins it.

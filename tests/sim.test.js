@@ -433,4 +433,79 @@ test('events fire on a schedule when chaos is on, never near the end, never when
   } finally { CONFIG.chaos.firstAfterSeconds = saved; }
 });
 
+// ---- M6: power-ups ----
+test('power-ups: every third capture earns one, and you hold at most two', () => {
+  const g = game();
+  const amy = g.players.amy;
+  for (let k = 0; k < 2; k++) Sim.earn(g, amy);
+  assert.strictEqual(amy.powers.length, 0);
+  Sim.earn(g, amy);
+  assert.strictEqual(amy.powers.length, 1);
+  for (let k = 0; k < 9; k++) Sim.earn(g, amy);
+  assert.strictEqual(amy.powers.length, CONFIG.powerups.maxHeld);
+  // Captures through real combat count too.
+  const h = game();
+  for (const id of ['oxford', 'southampton', 'norwich']) { h.cities[I[id]].n = 1; h.cities[I.london].n = 60; Sim.send(h, 'amy', [I.london], I[id]); until(h, () => h.fleets.length === 0); }
+  assert.strictEqual(h.players.amy.powers.length, 1);
+});
+
+test('speed: troops sent while it lasts travel twice as fast', () => {
+  const g = game();
+  g.cities[I.london].n = 60;
+  g.players.amy.powers = ['speed'];
+  Sim.send(g, 'amy', [I.london], I.oxford);
+  const slow = g.fleets[0].t1 - g.fleets[0].t0;
+  assert(Sim.usePower(g, 'amy', 0));
+  Sim.send(g, 'amy', [I.london], I.oxford);
+  const fast = g.fleets[1].t1 - g.fleets[1].t0;
+  assert(Math.abs(fast * 2 - slow) <= 2, slow + ' vs ' + fast);
+  assert.strictEqual(g.players.amy.powers.length, 0, 'used up');
+});
+
+test('shield: enemy troops bounce off, only on your own city, and it wears off', () => {
+  const g = game();
+  g.players.ben.powers = ['shield'];
+  assert(!Sim.usePower(g, 'ben', 0, I.london), "not on someone else's city");
+  g.cities[I.stoke].n = 5;
+  assert(Sim.usePower(g, 'ben', 0, I.stoke));
+  g.cities[I.birmingham] = { o: 0, n: 80, lv: 1 };
+  Sim.send(g, 'amy', [I.birmingham], I.stoke);
+  until(g, () => g.fleets.length === 0);
+  assert.strictEqual(g.cities[I.stoke].o, 1, 'still ben');
+  assert(g.cities[I.stoke].n >= 5, 'no damage');
+  run(g, CONFIG.powerups.shield.seconds * 1000);
+  g.cities[I.birmingham].n = 80;
+  Sim.send(g, 'amy', [I.birmingham], I.stoke);
+  until(g, () => g.fleets.length === 0);
+  assert.strictEqual(g.cities[I.stoke].o, 0, 'taken once the shield is gone');
+});
+
+test('sabotage: stops an enemy city producing for a while; not on neutrals, yourself or a teammate', () => {
+  const g = game();
+  g.players.amy.powers = ['sabotage'];
+  assert(!Sim.usePower(g, 'amy', 0, I.london));
+  assert(!Sim.usePower(g, 'amy', 0, I.birmingham));
+  g.cities[I.manchester].n = 10;
+  assert(Sim.usePower(g, 'amy', 0, I.manchester));
+  run(g, 5000);
+  assert.strictEqual(g.cities[I.manchester].n, 10);
+  run(g, CONFIG.powerups.sabotage.seconds * 1000);
+  assert(g.cities[I.manchester].n > 10, 'producing again');
+  const t = teamGame();
+  Sim.start(t);
+  const mate = Object.values(t.players).find(p => p.id !== 'amy' && p.team === t.players.amy.team);
+  t.players.amy.powers = ['sabotage'];
+  assert(!Sim.usePower(t, 'amy', 0, t.cities.findIndex(c => c.o === mate.idx)));
+});
+
+test('power-ups: bad slots and junk do nothing', () => {
+  const g = game();
+  assert(!Sim.usePower(g, 'amy', 0));
+  g.players.amy.powers = ['shield'];
+  assert(!Sim.usePower(g, 'amy', 5, I.london));
+  assert(!Sim.usePower(g, 'amy', 0, 'x'));
+  assert(!Sim.usePower(g, 'zed', 0, I.london));
+  assert.strictEqual(g.players.amy.powers.length, 1);
+});
+
 console.log(`\n${passed} passed`);
