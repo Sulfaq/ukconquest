@@ -1,6 +1,8 @@
 {
  "id": "uk",
  "name": "United Kingdom",
+ "orientation": "portrait",
+ "lengthLabel": "5 to 8 min",
  "territories": true,
  "southLine": 680,
  "prizeCity": "birmingham",
@@ -435,7 +437,7 @@
   ["swansea","birmingham"],
   ["inverness","glasgow"],
   ["inverness","edinburgh"],
-  ["glasgow","belfast"],
+  ["glasgow","belfast","sea"],
   ["preston","manchester"],
   ["preston","liverpool"],
   ["wrexham","liverpool"],
@@ -444,9 +446,6 @@
  "teamSlots": [
   [0,3],
   [1,2]
- ],
- "seaLinks": [
-  ["glasgow","belfast"]
  ],
  "slots": [
   {

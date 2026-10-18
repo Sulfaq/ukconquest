@@ -89,15 +89,14 @@ const sorted = [...cand.values()].sort((p, q) => dist(...p) - dist(...q));
 const kept = [];
 for (const l of sorted) if (!kept.some(k => cross(l[0], l[1], k[0], k[1]))) kept.push(l);
 const links = kept.map(([a, b]) => [a.id, b.id]);
-links.push(['glasgow', 'belfast']);
+links.push(['glasgow', 'belfast', 'sea']);   // the one sea crossing
 
 const map = {
-  id: 'uk', name: 'United Kingdom', width: W, height: H,
+  id: 'uk', name: 'United Kingdom', orientation: 'portrait', lengthLabel: '5 to 8 min', width: W, height: H,
   territories: true,
   land: [GB.map(proj)], ni: [NI.map(proj)], ireland: [IRELAND.map(proj)], islands: ISLANDS.map(p => p.map(proj)),
   cities: cities.map(({ id, name, x, y, size }) => ({ id, name, x: Math.round(x), y: Math.round(y), size })),
   links,
-  seaLinks: [['glasgow', 'belfast']],
   slots: [
     { name: 'South East', cities: ['london', 'brighton', 'cambridge'] },
     { name: 'North West', cities: ['manchester', 'liverpool', 'stoke'] },

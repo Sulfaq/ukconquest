@@ -8,7 +8,7 @@ const vm = require('vm');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const block = id => html.match(new RegExp(`<script[^>]*id="${id}">([\\s\\S]*?)</script>`))[1];
 const { Sim, CONFIG } = vm.runInNewContext(block('config') + block('sim') + '\n;({ Sim, CONFIG })', {});
-// MAP=england node tools/balance.js runs another map from maps/.
+// MAP=europe node tools/balance.js runs another map from maps/.
 const MAP = process.env.MAP ? JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'maps', process.env.MAP + '.json'), 'utf8')) : JSON.parse(block('map-uk'));
 Sim.setMap(MAP);
 const GAMES = +process.argv[2] || 300;

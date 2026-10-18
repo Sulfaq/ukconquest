@@ -617,28 +617,111 @@ test('spectators: watchers take free seats when the room goes back to the lobby'
   assert(!h.spectators.x, 'a watcher who leaves is forgotten');
 });
 
-test('maps: the host picks England in the lobby and the match uses it', () => {
-  const ENG = JSON.parse(block('map-england'));
-  Sim.setMap(ENG); Sim.setMap(MAP);   // register both, stay on the UK
-  try {
-    const g = Sim.createGame();
-    Sim.addPlayer(g, 'a', 'a'); Sim.addPlayer(g, 'b', 'b');
-    assert(Sim.setMapChoice(g, 'england'));
-    assert(!Sim.setMapChoice(g, 'narnia'));
-    Sim.start(g);
-    assert.strictEqual(g.cities.length, ENG.cities.length);
-    assert.strictEqual(Sim.snapshot(g).map, 'england');
-    assert.strictEqual(Sim.snapshot(g).maps.length, 2);
-    run(g, 5000);
-    // England is connected, every city is on English land, and the start corners are real cities.
-    const E = Object.fromEntries(ENG.cities.map((c, i) => [c.id, i]));
-    const seen = new Set([0]), q = [0];
-    while (q.length) for (const v of Sim.adj(q.shift())) if (!seen.has(v)) { seen.add(v); q.push(v); }
-    assert.strictEqual(seen.size, ENG.cities.length);
-    const inside = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
-    for (const c of ENG.cities) assert(inside(c.x, c.y, ENG.land[0]), c.id + ' is not in England');
-    for (const s of ENG.slots) for (const c of s.cities) assert(c in E, c);
-  } finally { Sim.setMap(MAP); }
+// ---- Bigger maps: Europe and World ----
+const EUROPE = JSON.parse(block('map-europe')), WORLD = JSON.parse(block('map-world'));
+const onMap = (m, fn) => { Sim.setMap(m); try { fn(); } finally { Sim.setMap(MAP); } };
+const insidePoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+
+test('maps: only UK, Europe and World exist, and the UK is the default', () => {
+  assert(!html.includes('map-england') && !html.includes('"england"'));
+  const g = Sim.createGame();
+  Sim.setMap(EUROPE); Sim.setMap(WORLD); Sim.setMap(MAP);
+  assert.strictEqual(Sim.snapshot(g).mapId, 'uk');
+  assert.deepStrictEqual(Sim.maps().map(m => m.id).join(), 'uk,europe,world');
+});
+
+for (const M of [MAP, EUROPE, WORLD]) {
+  test(`${M.name}: connected, every city on land, four start slots of real cities, data fields present`, () => {
+    onMap(M, () => {
+      const seen = new Set([0]), q = [0];
+      while (q.length) for (const v of Sim.adj(q.shift())) if (!seen.has(v)) { seen.add(v); q.push(v); }
+      assert.strictEqual(seen.size, M.cities.length, 'connected');
+      const polys = [...M.land, ...(M.ni || []), ...(M.islands || [])];
+      for (const c of M.cities) assert(polys.some(p => insidePoly(c.x, c.y, p)), c.id + ' is in the sea');
+      const ids = new Set(M.cities.map(c => c.id));
+      assert.strictEqual(M.slots.length, 4);
+      for (const s of M.slots) for (const c of s.cities) assert(ids.has(c), c);
+      assert(['portrait', 'landscape'].includes(M.orientation));
+      assert(M.links.some(l => l[2] === 'sea'), 'has sea links');
+    });
+  });
+
+  test(`${M.name}: four players doing random sends never break anything`, () => {
+    onMap(M, () => {
+      let seed = 11;
+      const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let game = 0; game < 3; game++) {
+        const g = Sim.createGame();
+        ['a', 'b', 'c', 'd'].forEach(id => Sim.addPlayer(g, id, id));
+        Sim.start(g, rand);
+        const used = new Set(Object.values(g.players).map(p => p.slot));
+        assert.strictEqual(used.size, 4, 'four different corners');
+        for (let t = 0; g.phase === 'play' && t < 20 * 60000; t += CONFIG.tickMs) {
+          Sim.step(g);
+          if (t % 500) continue;
+          for (const p of Object.values(g.players)) {
+            const mine = g.cities.map((c, i) => i).filter(i => g.cities[i].o === p.idx);
+            if (mine.length) Sim.send(g, p.id, [mine[Math.floor(rand() * mine.length)]], Math.floor(rand() * M.cities.length));
+          }
+          for (const c of g.cities) assert(Number.isFinite(c.n) && c.n >= 0);
+        }
+        assert.strictEqual(g.phase, 'over');
+        assert(g.t <= Sim.matchMs(), 'ends by the map\'s own time limit');
+      }
+    });
+  });
+}
+
+test('sea crossings take 1.5x as long as land of the same length', () => {
+  const g = game();
+  g.cities[I.glasgow] = { o: 0, n: 40, lv: 1 };
+  Sim.send(g, 'amy', [I.glasgow], I.belfast);
+  const f = g.fleets[0];
+  const land = Sim.linkLen(I.glasgow, I.belfast) / CONFIG.travelSpeed * 1000;
+  assert(Math.abs((f.t1 - f.t0) - land * CONFIG.seaTravelFactor) <= 1);
+  assert(Sim.isSea(I.glasgow, I.belfast) && !Sim.isSea(I.london, I.oxford));
+});
+
+test('each map sets its own match length and overtime', () => {
+  onMap(EUROPE, () => {
+    assert.strictEqual(Sim.matchMs(), 420000);
+    assert.strictEqual(Sim.overtimeMs(), 240000);
+  });
+  assert.strictEqual(Sim.matchMs(), CONFIG.matchSeconds * 1000, 'the UK uses the default');
+});
+
+test('World: continents meet only at a few chokepoints, and none is a dead end', () => {
+  const continent = {
+    na: ['vancouver', 'losangeles', 'chicago', 'toronto', 'newyork', 'mexicocity', 'houston', 'miami'],
+    sa: ['bogota', 'caracas', 'lima', 'saopaulo', 'buenosaires', 'santiago', 'manaus'],
+    eu: ['london', 'madrid', 'paris', 'berlin', 'moscow', 'istanbul'],
+    af: ['casablanca', 'cairo', 'lagos', 'kinshasa', 'nairobi', 'johannesburg'],
+    as: ['dubai', 'mumbai', 'delhi', 'dhaka', 'bangkok', 'singapore', 'beijing', 'shanghai', 'seoul', 'tokyo', 'jakarta'],
+    oc: ['perth', 'sydney', 'auckland'],
+  };
+  const of = {};
+  for (const [k, list] of Object.entries(continent)) for (const id of list) of[id] = k;
+  assert.strictEqual(Object.keys(of).length, WORLD.cities.length, 'every city is on a continent');
+  const between = {};
+  for (const [a, b, type] of WORLD.links) {
+    if (of[a] === of[b]) continue;
+    for (const k of [of[a], of[b]]) (between[k] = between[k] || []).push(a + '-' + b + (type ? ' (sea)' : ''));
+  }
+  for (const k of Object.keys(continent)) {
+    assert(between[k] && between[k].length >= 2, k + ' can be sealed off by one link: ' + between[k]);
+  }
+  // Any two continents meet at three links at most: real chokepoints.
+  const pairs = {};
+  for (const [a, b] of WORLD.links) if (of[a] !== of[b]) { const k = [of[a], of[b]].sort().join('-'); pairs[k] = (pairs[k] || 0) + 1; }
+  for (const [k, n] of Object.entries(pairs)) assert(n <= 3, k + ' has ' + n + ' links');
+  // Long ocean crossings take 6-10 seconds.
+  onMap(WORLD, () => {
+    const I2 = Object.fromEntries(WORLD.cities.map((c, i) => [c.id, i]));
+    for (const [a, b] of [['newyork', 'london'], ['saopaulo', 'lagos'], ['tokyo', 'losangeles']]) {
+      const s = Sim.linkCost(I2[a], I2[b]) / CONFIG.travelSpeed;
+      assert(s >= 5.5 && s <= 10.5, `${a}-${b} takes ${s.toFixed(1)}s`);
+    }
+  });
 });
 
 console.log(`\n${passed} passed`);
