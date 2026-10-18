@@ -1,0 +1,462 @@
+{
+ "id": "uk",
+ "name": "United Kingdom",
+ "width": 600,
+ "height": 899,
+ "land": [
+  [
+   [567.5,773.8],
+   [571.6,748.4],
+   [540.9,738.3],
+   [532,726.1],
+   [546.8,707.8],
+   [563.3,690.5],
+   [583.4,665.1],
+   [591.1,636.7],
+   [590,614.4],
+   [564.5,591],
+   [517.2,586.9],
+   [499.5,602.2],
+   [508.4,568.7],
+   [494.8,523],
+   [483,470.2],
+   [464,453.9],
+   [451,433.6],
+   [419.7,418.4],
+   [406.7,391],
+   [403.7,375.7],
+   [387.2,335.1],
+   [369.5,302.6],
+   [361.8,289.4],
+   [339.9,279.3],
+   [325.1,273.2],
+   [298.5,281.3],
+   [274.9,276.2],
+   [304.4,267.1],
+   [335.2,250.8],
+   [319.2,235.6],
+   [335.2,222.4],
+   [341.7,207.2],
+   [357.6,181.8],
+   [365.3,162.5],
+   [382.5,126.9],
+   [369.5,107.6],
+   [338.7,108.7],
+   [293.8,104.6],
+   [258.9,116.8],
+   [239.4,126.9],
+   [251.2,106.6],
+   [251.2,89.4],
+   [271.9,64],
+   [305.6,31.5],
+   [309.2,11.2],
+   [279.6,15.2],
+   [192.1,13.2],
+   [177.3,60.9],
+   [171.4,86.3],
+   [150.7,103.6],
+   [143.6,134],
+   [149.6,149.3],
+   [143.1,177.7],
+   [120,206.1],
+   [164.3,237.6],
+   [156.7,279.3],
+   [144.8,350.3],
+   [165.5,325],
+   [192.1,294.5],
+   [206.9,284.3],
+   [214,334.1],
+   [200.4,356.4],
+   [183.3,396],
+   [200.4,417.4],
+   [248.3,398.1],
+   [280.8,383.9],
+   [298.5,385.9],
+   [280.8,409.2],
+   [273.1,432.6],
+   [296.7,472.2],
+   [317.4,475.2],
+   [307.4,500.6],
+   [310.3,517.9],
+   [307.4,538.2],
+   [301.5,545.3],
+   [304.4,558.5],
+   [261.3,550.4],
+   [239.4,553.4],
+   [215.8,543.3],
+   [218.7,568.7],
+   [206.9,604.2],
+   [248.3,612.3],
+   [246.5,643.8],
+   [211.6,675.3],
+   [174.4,697.6],
+   [189.2,715.9],
+   [209.9,719],
+   [233.5,715.9],
+   [233.5,729.1],
+   [254.2,726.1],
+   [269,738.3],
+   [300.3,741.3],
+   [313.3,731.1],
+   [334,724],
+   [326.9,736.2],
+   [311.5,753.5],
+   [283.7,766.7],
+   [261.3,763.6],
+   [219.9,787],
+   [218.7,804.3],
+   [196.3,832.7],
+   [187.4,845.9],
+   [163.7,867.2],
+   [150.1,882.5],
+   [180.3,892.6],
+   [188,873.3],
+   [214,855],
+   [242.4,852],
+   [272.5,866.2],
+   [279.6,842.8],
+   [286.7,825.6],
+   [314.5,815.4],
+   [342.9,835.7],
+   [372.4,827.6],
+   [378.3,815.4],
+   [404.9,807.3],
+   [423.8,809.3],
+   [441,814.4],
+   [479.4,805.3],
+   [502.5,814.4],
+   [521.4,802.2],
+   [545,796.1],
+   [557.4,778.9]
+  ]
+ ],
+ "ni": [
+  [
+   [59.1,373.7],
+   [79.8,363.5],
+   [124.1,358.5],
+   [147.8,396],
+   [159.6,416.3],
+   [165.5,441.7],
+   [153.7,460],
+   [127.1,479.3],
+   [97.5,477.3],
+   [73.9,462],
+   [41.4,470.2],
+   [5.9,436.7],
+   [29.6,421.4],
+   [41.4,406.2],
+   [47.3,385.9]
+  ]
+ ],
+ "ireland": [
+  [
+   [52,342.2],
+   [124.1,358.5],
+   [147.8,396],
+   [159.6,416.3],
+   [165.5,441.7],
+   [153.7,460],
+   [127.1,482.4],
+   [127.1,548.4],
+   [133,586.9],
+   [111.7,668.2],
+   [73.9,672.2],
+   [-3,705.8],
+   [-44.3,726.1],
+   [-73.9,655],
+   [-44.3,563.6],
+   [-79.8,462],
+   [-20.7,451.9],
+   [-32.5,421.4],
+   [-3,365.6]
+  ]
+ ],
+ "cities": [
+  {
+   "id": "london",
+   "name": "London",
+   "x": 484,
+   "y": 734,
+   "size": "L"
+  },
+  {
+   "id": "birmingham",
+   "name": "Birmingham",
+   "x": 364,
+   "y": 656,
+   "size": "L"
+  },
+  {
+   "id": "manchester",
+   "name": "Manchester",
+   "x": 328,
+   "y": 518,
+   "size": "L"
+  },
+  {
+   "id": "glasgow",
+   "name": "Glasgow",
+   "x": 231,
+   "y": 294,
+   "size": "L"
+  },
+  {
+   "id": "bristol",
+   "name": "Bristol",
+   "x": 357,
+   "y": 744,
+   "size": "L"
+  },
+  {
+   "id": "leeds",
+   "name": "Leeds",
+   "x": 384,
+   "y": 461,
+   "size": "M"
+  },
+  {
+   "id": "liverpool",
+   "name": "Liverpool",
+   "x": 272,
+   "y": 568,
+   "size": "M"
+  },
+  {
+   "id": "sheffield",
+   "name": "Sheffield",
+   "x": 422,
+   "y": 526,
+   "size": "M"
+  },
+  {
+   "id": "newcastle",
+   "name": "Newcastle",
+   "x": 393,
+   "y": 384,
+   "size": "M"
+  },
+  {
+   "id": "nottingham",
+   "name": "Nottingham",
+   "x": 417,
+   "y": 592,
+   "size": "M"
+  },
+  {
+   "id": "edinburgh",
+   "name": "Edinburgh",
+   "x": 304,
+   "y": 284,
+   "size": "M"
+  },
+  {
+   "id": "cardiff",
+   "name": "Cardiff",
+   "x": 285,
+   "y": 751,
+   "size": "M"
+  },
+  {
+   "id": "brighton",
+   "name": "Brighton",
+   "x": 479,
+   "y": 807,
+   "size": "M"
+  },
+  {
+   "id": "leicester",
+   "name": "Leicester",
+   "x": 454,
+   "y": 644,
+   "size": "S"
+  },
+  {
+   "id": "stoke",
+   "name": "Stoke",
+   "x": 352,
+   "y": 586,
+   "size": "S"
+  },
+  {
+   "id": "hull",
+   "name": "Hull",
+   "x": 479,
+   "y": 522,
+   "size": "S"
+  },
+  {
+   "id": "york",
+   "name": "York",
+   "x": 449,
+   "y": 469,
+   "size": "S"
+  },
+  {
+   "id": "norwich",
+   "name": "Norwich",
+   "x": 565,
+   "y": 622,
+   "size": "S"
+  },
+  {
+   "id": "cambridge",
+   "name": "Cambridge",
+   "x": 501,
+   "y": 665,
+   "size": "S"
+  },
+  {
+   "id": "oxford",
+   "name": "Oxford",
+   "x": 418,
+   "y": 710,
+   "size": "S"
+  },
+  {
+   "id": "southampton",
+   "name": "Southampton",
+   "x": 405,
+   "y": 796,
+   "size": "S"
+  },
+  {
+   "id": "exeter",
+   "name": "Exeter",
+   "x": 285,
+   "y": 817,
+   "size": "S"
+  },
+  {
+   "id": "plymouth",
+   "name": "Plymouth",
+   "x": 237,
+   "y": 855,
+   "size": "S"
+  },
+  {
+   "id": "swansea",
+   "name": "Swansea",
+   "x": 237,
+   "y": 707,
+   "size": "S"
+  },
+  {
+   "id": "carlisle",
+   "name": "Carlisle",
+   "x": 315,
+   "y": 392,
+   "size": "S"
+  },
+  {
+   "id": "aberdeen",
+   "name": "Aberdeen",
+   "x": 364,
+   "y": 163,
+   "size": "S"
+  },
+  {
+   "id": "inverness",
+   "name": "Inverness",
+   "x": 238,
+   "y": 129,
+   "size": "S"
+  },
+  {
+   "id": "belfast",
+   "name": "Belfast",
+   "x": 137,
+   "y": 421,
+   "size": "M"
+  }
+ ],
+ "links": [
+  ["york","hull"],
+  ["plymouth","exeter"],
+  ["cambridge","leicester"],
+  ["oxford","leicester"],
+  ["leicester","nottingham"],
+  ["york","leeds"],
+  ["swansea","cardiff"],
+  ["stoke","nottingham"],
+  ["york","sheffield"],
+  ["hull","sheffield"],
+  ["nottingham","sheffield"],
+  ["sheffield","leeds"],
+  ["stoke","manchester"],
+  ["stoke","birmingham"],
+  ["leicester","birmingham"],
+  ["oxford","london"],
+  ["oxford","bristol"],
+  ["cambridge","london"],
+  ["stoke","liverpool"],
+  ["southampton","bristol"],
+  ["cardiff","bristol"],
+  ["leeds","manchester"],
+  ["liverpool","manchester"],
+  ["manchester","sheffield"],
+  ["edinburgh","glasgow"],
+  ["brighton","london"],
+  ["oxford","birmingham"],
+  ["southampton","brighton"],
+  ["nottingham","birmingham"],
+  ["cambridge","norwich"],
+  ["newcastle","leeds"],
+  ["carlisle","newcastle"],
+  ["southampton","oxford"],
+  ["bristol","birmingham"],
+  ["carlisle","leeds"],
+  ["southampton","london"],
+  ["york","newcastle"],
+  ["exeter","bristol"],
+  ["carlisle","edinburgh"],
+  ["liverpool","birmingham"],
+  ["carlisle","glasgow"],
+  ["inverness","aberdeen"],
+  ["norwich","hull"],
+  ["edinburgh","newcastle"],
+  ["aberdeen","edinburgh"],
+  ["norwich","london"],
+  ["swansea","birmingham"],
+  ["inverness","glasgow"],
+  ["inverness","edinburgh"],
+  ["glasgow","belfast"]
+ ],
+ "seaLinks": [
+  ["glasgow","belfast"]
+ ],
+ "slots": [
+  {
+   "name": "South East",
+   "cities": [
+    "london",
+    "brighton",
+    "cambridge"
+   ]
+  },
+  {
+   "name": "North West",
+   "cities": [
+    "manchester",
+    "liverpool",
+    "stoke"
+   ]
+  },
+  {
+   "name": "Scotland",
+   "cities": [
+    "glasgow",
+    "edinburgh",
+    "carlisle"
+   ]
+  },
+  {
+   "name": "South West",
+   "cities": [
+    "bristol",
+    "cardiff",
+    "exeter"
+   ]
+  }
+ ]
+}
