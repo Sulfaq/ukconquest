@@ -11,6 +11,7 @@ const block = id => html.match(new RegExp(`<script[^>]*id="${id}">([\\s\\S]*?)</
 const { Sim, CONFIG } = vm.runInNewContext(block('config') + block('sim') + '\n;({ Sim, CONFIG })', {});
 const MAP = JSON.parse(block('map-uk'));
 Sim.setMap(MAP);
+CONFIG.chaos.firstAfterSeconds = 1e9;   // random events off unless a test fires one
 const I = Object.fromEntries(MAP.cities.map((c, i) => [c.id, i]));
 
 let passed = 0;
@@ -367,6 +368,69 @@ test('map: every city sits on land, and the North West has a backyard of its own
   const nw = new Set(MAP.slots[1].cities.map(id => I[id]));
   for (const id of ['preston', 'wrexham']) assert(Sim.adj(I[id]).every(j => nw.has(j)), id);
   assert(MAP.territories);
+});
+
+// ---- M5: chaos events ----
+test('rail strike shuts one line: no route along it until it ends', () => {
+  const g = game();
+  for (const c of g.cities) c.n = 60;
+  const e = Sim.chaos(g, 'railStrike', () => 0);
+  const [i, j] = e.links[0].split(',').map(Number);
+  assert(Sim.blocked(g, i, j));
+  const owner = g.cities[i].o >= 0 ? i : j, other = owner === i ? j : i;
+  const p = Object.values(g.players).find(q => q.idx === g.cities[owner].o);
+  const r = Sim.route(g, p.idx, owner, other);
+  assert(!r || r.path.length > 2, 'must go the long way round, if at all');
+  run(g, CONFIG.chaos.railStrike.seconds * 1000 + 200);
+  assert(!Sim.blocked(g, i, j), 'line reopens');
+});
+
+test('Storm Gerald cuts Belfast off; bank holiday doubles production; heatwave halves the South', () => {
+  const g = game();
+  g.cities[I.glasgow] = { o: 0, n: 60, lv: 1 };
+  Sim.chaos(g, 'stormGerald');
+  assert(!Sim.send(g, 'amy', [I.glasgow], I.belfast));
+  const h = game();
+  h.cities[I.london].n = 10; h.cities[I.manchester].n = 10;
+  Sim.chaos(h, 'bankHoliday');
+  run(h, 1000);
+  assert(Math.abs(h.cities[I.london].n - (10 + 2 * CONFIG.production.L)) < 0.01);
+  const k = game();
+  k.cities[I.london].n = 10; k.cities[I.manchester].n = 10;
+  Sim.chaos(k, 'heatwave');
+  run(k, 1000);
+  assert(Math.abs(k.cities[I.london].n - (10 + 0.5 * CONFIG.production.L)) < 0.01, 'London is in the South');
+  assert(Math.abs(k.cities[I.manchester].n - (10 + CONFIG.production.L)) < 0.01, 'Manchester is not');
+});
+
+test('Greggs only ever strengthens a neutral city', () => {
+  for (let n = 0; n < 30; n++) {
+    const g = game();
+    const before = g.cities.map(c => c.n);
+    const e = Sim.chaos(g, 'greggs');
+    assert.strictEqual(g.cities[e.c].o, -1);
+    assert.strictEqual(g.cities[e.c].n, before[e.c] + CONFIG.chaos.greggs.troops);
+  }
+});
+
+test('events fire on a schedule when chaos is on, never near the end, never when off', () => {
+  const saved = CONFIG.chaos.firstAfterSeconds;
+  CONFIG.chaos.firstAfterSeconds = 60;
+  try {
+    const g = game(2);
+    for (const c of g.cities) if (c.o < 0) c.n = 1e6;   // nobody can take anything, so the match runs the full time
+    const fired = [];
+    while (g.phase === 'play') { Sim.step(g); for (const e of g.events) if (e.k === 'chaos' && e.t === g.t) fired.push(e.t); }
+    assert(fired.length >= 4, fired.length + ' events');
+    assert(fired[0] >= 60000);
+    assert(fired.every(t => t < (CONFIG.matchSeconds - CONFIG.chaos.quietLastSeconds) * 1000));
+    const h = Sim.createGame();
+    Sim.addPlayer(h, 'a', 'a');
+    assert(Sim.setChaos(h, false));
+    Sim.start(h);
+    run(h, 300000);
+    assert(!h.events.some(e => e.k === 'chaos'));
+  } finally { CONFIG.chaos.firstAfterSeconds = saved; }
 });
 
 console.log(`\n${passed} passed`);

@@ -2,6 +2,7 @@
  "id": "uk",
  "name": "United Kingdom",
  "territories": true,
+ "southLine": 680,
  "width": 600,
  "height": 899,
  "land": [
