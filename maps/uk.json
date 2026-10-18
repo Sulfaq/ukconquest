@@ -422,6 +422,7 @@
   ["inverness","edinburgh"],
   ["glasgow","belfast"]
  ],
+ "teamSlots": [[0,3],[1,2]],
  "seaLinks": [
   ["glasgow","belfast"]
  ],

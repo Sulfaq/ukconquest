@@ -187,4 +187,120 @@ test('snapshot stays small with lots of fleets in the air', () => {
   assert(bytes < 8000, bytes + ' bytes');
 });
 
+// ---- M2: modes, teams, time limit, overtime, rematch ----
+function teamGame() {
+  const g = Sim.createGame();
+  ['amy', 'ben', 'cat', 'dev'].forEach(id => Sim.addPlayer(g, id, id));
+  assert(Sim.setMode(g, 'teams'));
+  return g;
+}
+const teamsOf = g => ['amy', 'ben', 'cat', 'dev'].map(id => g.players[id].team).join();
+
+test('2 v 2: joining alternates teams, teams cap at two, both need someone', () => {
+  const g = teamGame();
+  assert.strictEqual(teamsOf(g), '0,1,0,1');
+  assert(!Sim.setTeam(g, 'ben', 0), 'team 0 is full');
+  const h = Sim.createGame();
+  Sim.addPlayer(h, 'a', 'a'); Sim.setMode(h, 'teams');
+  assert(Sim.startProblem(h));
+  Sim.addPlayer(h, 'b', 'b');
+  assert.strictEqual(Sim.startProblem(h), '');
+  Sim.setTeam(h, 'b', 0);
+  assert(Sim.startProblem(h), 'everyone on one team');
+});
+
+test('2 v 2: teammates start in neighbouring corners and share a colour family', () => {
+  for (let k = 0; k < 20; k++) {
+    const g = teamGame();
+    Sim.start(g);
+    const halves = MAP.teamSlots.map(h => h.slice().sort().join());
+    for (const t of [0, 1]) {
+      const slots = Object.values(g.players).filter(p => p.team === t).map(p => p.slot).sort().join();
+      assert(halves.includes(slots), slots);
+    }
+    const s = Sim.snapshot(g);
+    for (const p of s.players) assert(CONFIG.teamColours[p.team].includes(p.colour));
+    assert.strictEqual(new Set(s.players.map(p => p.colour)).size, 4);
+  }
+});
+
+test('2 v 2: you can reinforce a teammate, never attack them', () => {
+  const g = teamGame();
+  Sim.start(g);
+  const amy = g.players.amy, cat = g.players.cat;
+  const catCity = I.oxford, amyCity = I.london;
+  g.cities[catCity] = { o: cat.idx, n: 10 };
+  g.cities[amyCity] = { o: amy.idx, n: 40 };
+  const enemy = g.cities.findIndex(c => c.o === g.players.ben.idx);
+  assert(!Sim.route(g, amy.idx, amyCity, enemy) || !Sim.allied(g, amy.idx, g.players.ben.idx));
+  const before = g.cities[catCity].n;
+  assert(Sim.send(g, 'amy', [amyCity], catCity), 'teammate is reachable');
+  until(g, () => g.fleets.length === 0);
+  assert.strictEqual(g.cities[catCity].o, cat.idx, "still the teammate's");
+  assert(g.cities[catCity].n > before + 15);
+  assert(amy.stats.gifted >= 20);
+});
+
+test('2 v 2: a team wins when the other team is wiped out', () => {
+  const g = teamGame();
+  Sim.start(g);
+  const winner = Object.values(g.players).find(p => p.team === 1).idx;
+  for (const c of g.cities) if (c.o >= 0) c.o = winner;
+  Sim.step(g);
+  assert.strictEqual(g.phase, 'over');
+  assert.strictEqual(g.winTeam, 1);
+  assert.strictEqual(g.endReason, 'elimination');
+});
+
+test('time limit: most cities wins, troops break a tie', () => {
+  const g = game(2);
+  g.cities[I.leeds].o = 1;   // ben has one more city
+  run(g, CONFIG.matchSeconds * 1000);
+  assert.strictEqual(g.phase, 'over');
+  assert.strictEqual(g.endReason, 'time');
+  assert.strictEqual(g.winner, 1);
+  const h = game(2);
+  h.t = CONFIG.matchSeconds * 1000 - CONFIG.tickMs;
+  for (const c of h.cities) if (c.o === 0) c.n = 30;
+  for (const c of h.cities) if (c.o === 1) c.n = 10;
+  Sim.step(h);
+  assert.strictEqual(h.winner, 0, 'tie on cities, amy has more troops');
+});
+
+test('overtime: production is boosted after the overtime mark', () => {
+  const g = game();
+  g.t = CONFIG.overtimeAtSeconds * 1000;
+  g.cities[I.london].n = 10;
+  run(g, 1000);
+  assert(Math.abs(g.cities[I.london].n - (10 + CONFIG.production.L * CONFIG.overtimeBoost)) < 0.01);
+  assert(Sim.snapshot(g).ot);
+});
+
+test('rematch keeps players, mode and teams, and starts a fresh match', () => {
+  const g = teamGame();
+  Sim.start(g);
+  for (const c of g.cities) if (c.o >= 0) c.o = g.players.amy.idx;
+  Sim.step(g);
+  assert.strictEqual(g.phase, 'over');
+  const before = teamsOf(g);
+  assert(Sim.rematch(g));
+  assert.strictEqual(g.phase, 'play');
+  assert.strictEqual(g.mode, 'teams');
+  assert.strictEqual(teamsOf(g), before);
+  assert.strictEqual(g.t, 0);
+  for (const p of Object.values(g.players)) assert.strictEqual(p.stats.taken, 0);
+});
+
+test('end screen stats count captures, troops sent and peak cities', () => {
+  const g = game(2);
+  g.cities[I.london].n = 60; g.cities[I.oxford].n = 1;
+  Sim.send(g, 'amy', [I.london], I.oxford);
+  until(g, () => g.fleets.length === 0);
+  assert.strictEqual(g.players.amy.stats.taken, 1);
+  assert.strictEqual(g.players.amy.stats.sent, 30);
+  assert.strictEqual(g.players.amy.stats.peak, 4);
+  Sim.step(g); g.phase = 'over';
+  assert(Sim.snapshot(g).players[0].stats, 'stats only travel at the end');
+});
+
 console.log(`\n${passed} passed`);
