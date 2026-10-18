@@ -20,3 +20,5 @@ A real-time conquest game for 2 to 4 mates on a map of the UK. Drag troops betwe
 - `maps/uk.json` holds city positions, sizes, links and start slots. Edit it, then run `node tools/inline.js`.
   (`tools/build-map.js` generated the first version from latitude and longitude; it won't overwrite the hand-tuned file without `--force`.)
 - Tests: `node tests/sim.test.js`
+- Balance: `node tools/balance.js [games]` plays bot-v-bot matches and reports win rates per start corner.
+  `node tools/build-map.js --outline` redraws the coastline and islands without touching cities or links.

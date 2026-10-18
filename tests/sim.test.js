@@ -359,4 +359,14 @@ test('a captured city keeps its level', () => {
   assert.strictEqual(g.cities[I.oxford].lv, 3);
 });
 
+
+// ---- M4: the real UK map ----
+test('map: every city sits on land, and the North West has a backyard of its own', () => {
+  const inside = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+  for (const c of MAP.cities) assert([...MAP.land, ...MAP.ni].some(p => inside(c.x, c.y, p)), c.id + ' is in the sea');
+  const nw = new Set(MAP.slots[1].cities.map(id => I[id]));
+  for (const id of ['preston', 'wrexham']) assert(Sim.adj(I[id]).every(j => nw.has(j)), id);
+  assert(MAP.territories);
+});
+
 console.log(`\n${passed} passed`);

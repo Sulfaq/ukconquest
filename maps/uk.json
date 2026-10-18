@@ -1,6 +1,7 @@
 {
  "id": "uk",
  "name": "United Kingdom",
+ "territories": true,
  "width": 600,
  "height": 899,
  "land": [
@@ -246,22 +247,22 @@
   {
    "id": "edinburgh",
    "name": "Edinburgh",
-   "x": 304,
-   "y": 284,
+   "x": 302,
+   "y": 294,
    "size": "M"
   },
   {
    "id": "cardiff",
    "name": "Cardiff",
-   "x": 285,
-   "y": 751,
+   "x": 288,
+   "y": 736,
    "size": "M"
   },
   {
    "id": "brighton",
    "name": "Brighton",
-   "x": 479,
-   "y": 807,
+   "x": 478,
+   "y": 794,
    "size": "M"
   },
   {
@@ -316,8 +317,8 @@
   {
    "id": "southampton",
    "name": "Southampton",
-   "x": 405,
-   "y": 796,
+   "x": 404,
+   "y": 788,
    "size": "S"
   },
   {
@@ -330,8 +331,8 @@
   {
    "id": "plymouth",
    "name": "Plymouth",
-   "x": 237,
-   "y": 855,
+   "x": 242,
+   "y": 840,
    "size": "S"
   },
   {
@@ -351,15 +352,15 @@
   {
    "id": "aberdeen",
    "name": "Aberdeen",
-   "x": 364,
-   "y": 163,
+   "x": 354,
+   "y": 166,
    "size": "S"
   },
   {
    "id": "inverness",
    "name": "Inverness",
-   "x": 238,
-   "y": 129,
+   "x": 242,
+   "y": 142,
    "size": "S"
   },
   {
@@ -368,6 +369,20 @@
    "x": 137,
    "y": 421,
    "size": "M"
+  },
+  {
+   "id": "preston",
+   "name": "Preston",
+   "x": 292,
+   "y": 462,
+   "size": "S"
+  },
+  {
+   "id": "wrexham",
+   "name": "Wrexham",
+   "x": 232,
+   "y": 604,
+   "size": "S"
   }
  ],
  "links": [
@@ -405,12 +420,10 @@
   ["carlisle","newcastle"],
   ["southampton","oxford"],
   ["bristol","birmingham"],
-  ["carlisle","leeds"],
   ["southampton","london"],
   ["york","newcastle"],
   ["exeter","bristol"],
   ["carlisle","edinburgh"],
-  ["liverpool","birmingham"],
   ["carlisle","glasgow"],
   ["inverness","aberdeen"],
   ["norwich","hull"],
@@ -420,9 +433,16 @@
   ["swansea","birmingham"],
   ["inverness","glasgow"],
   ["inverness","edinburgh"],
-  ["glasgow","belfast"]
+  ["glasgow","belfast"],
+  ["preston","manchester"],
+  ["preston","liverpool"],
+  ["wrexham","liverpool"],
+  ["wrexham","stoke"]
  ],
- "teamSlots": [[0,3],[1,2]],
+ "teamSlots": [
+  [0,3],
+  [1,2]
+ ],
  "seaLinks": [
   ["glasgow","belfast"]
  ],
@@ -459,5 +479,67 @@
     "exeter"
    ]
   }
+ ],
+ "islands": [
+  [
+   [394.3,820.5],
+   [410.8,810.4],
+   [424.4,819.5],
+   [410.8,829.6]
+  ],
+  [
+   [203.9,476.3],
+   [230,439.7],
+   [233.5,451.9],
+   [214.6,476.3]
+  ],
+  [
+   [124.1,157.4],
+   [153.7,152.3],
+   [133,106.6],
+   [112.3,108.7],
+   [97.5,121.9],
+   [91.6,137.1]
+  ],
+  [
+   [112.3,248.8],
+   [150.7,233.6],
+   [133,213.3],
+   [112.3,223.4]
+  ],
+  [
+   [103.4,311.8],
+   [127.1,314.8],
+   [127.1,289.4],
+   [109.4,294.5]
+  ],
+  [
+   [133,294.5],
+   [150.7,269.1],
+   [141.9,267.1],
+   [130,289.4]
+  ],
+  [
+   [171.4,309.7],
+   [186.2,317.8],
+   [183.3,337.1],
+   [168.5,330]
+  ],
+  [
+   [121.2,25.4],
+   [124.1,50.8],
+   [109.4,76.2],
+   [79.8,96.5],
+   [68,81.2],
+   [79.8,45.7],
+   [118.2,23.4]
+  ],
+  [
+   [62.1,106.6],
+   [65,137.1],
+   [56.2,167.6],
+   [47.3,137.1],
+   [44.3,111.7]
+  ]
  ]
 }
