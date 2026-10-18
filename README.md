@@ -8,7 +8,7 @@ Two maps: the whole United Kingdom, or a zoomed-in England.
 
 ## Controls
 
-- **Drag** from one of your cities to another city to send half its troops.
+- **Drag** from one of your cities to another city to send all its troops (the city starts again from zero).
 - **Drag through several** of your cities on the way to chain them: they all send at once.
 - Troops can travel through your own cities, but not through anyone else's.
 - **Tap** one of your cities to upgrade it (levels 1 to 3). It costs troops from that city: 35 for level 2, 70 for level 3.

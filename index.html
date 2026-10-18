@@ -117,7 +117,7 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 <script id="config">
 'use strict';
 const CONFIG = {
-  version: '0.8',
+  version: '0.9',
   maxPlayers: 4,
   minPlayers: 2,              // the host can still start alone for a practice run
   modes: { ffa: 'Free for all', teams: '2 v 2' },
@@ -147,7 +147,8 @@ const CONFIG = {
   overtimeAtSeconds: 300,     // from here all production is boosted so stalemates break
   overtimeBoost: 1.5,
   tickMs: 100,                // server simulation step (10 Hz)
-  sendFraction: 0.5,          // share of a city's garrison sent per drag
+  sendFraction: 1,            // share of a city's garrison sent per drag (1 = the lot)
+  sendKeeps: 0,               // troops that always stay behind in the city you send from
   defenderBonus: 1.1,         // defenders count this much more than attackers
   travelSpeed: 40,            // map units per second along links (a long link is about 4 seconds)
   production: { L: 1.0, M: 0.6, S: 0.35 },   // troops per second at level 1
@@ -485,7 +486,7 @@ const Sim = (() => {
     return { path, len: d[dst] };
   }
 
-  // Intent: send half of each source city's garrison to `to`. Returns true if anything was sent.
+  // Intent: send each source city's garrison (CONFIG.sendFraction of it) to `to`. Returns true if anything was sent.
   // Captured cities keep their level, so upgraded cities are worth taking.
   function cityCap(g, i) { return CONFIG.cap[MAP.cities[i].size] * CONFIG.levelCap[g.cities[i].lv || 1]; }
 
@@ -524,7 +525,7 @@ const Sim = (() => {
       seen.add(s);
       const c = g.cities[s];
       if (c.o !== p.idx) continue;
-      const n = Math.min(Math.floor(c.n * CONFIG.sendFraction), Math.floor(c.n) - 1);
+      const n = Math.min(Math.floor(c.n * CONFIG.sendFraction), Math.floor(c.n) - CONFIG.sendKeeps);
       if (n < 1) continue;
       const r = route(g, p.idx, s, to);
       if (!r) continue;
@@ -1520,7 +1521,7 @@ const Net = (() => {
       const to = drag.target, from = drag.chain.filter(i => i !== to);
       drag = null;
       if (to < 0 || !from.length || !reachable(from).has(to)) return;
-      if (!from.some(i => snap.c[i][1] >= 2)) { toast('Not enough troops to send'); return; }
+      if (!from.some(i => snap.c[i][1] >= 1 + CONFIG.sendKeeps)) { toast('Not enough troops to send'); return; }
       session.act('send', { from, to });
       Sound.play('send'); buzz(10);
     }

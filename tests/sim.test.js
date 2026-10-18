@@ -67,23 +67,38 @@ test('production ticks up and stops at the cap; neutrals do not produce', () => 
   assert.strictEqual(g.cities[I.cambridge].n, CONFIG.cap.S);
 });
 
-test('send: half the garrison travels along the link and captures a weak neutral', () => {
+test('send: the whole garrison travels along the link, the city drops to zero, and it captures a weak neutral', () => {
   const g = game();
   g.cities[I.london].n = 40;
   g.cities[I.oxford].n = 5;
   assert(Sim.send(g, 'amy', [I.london], I.oxford));
-  assert.strictEqual(g.cities[I.london].n, 20);
+  assert.strictEqual(g.cities[I.london].n, 0);
+  assert.strictEqual(g.cities[I.london].o, 0, 'still yours at zero');
   const f = g.fleets[0];
-  assert.strictEqual(f.n, 20);
+  assert.strictEqual(f.n, 40);
   assert(f.t1 - f.t0 > 1000 && f.t1 - f.t0 < 6000, 'travel time ' + (f.t1 - f.t0));
   until(g, () => g.fleets.length === 0);
   assert.strictEqual(g.cities[I.oxford].o, 0);
-  assert(Math.abs(g.cities[I.oxford].n - (20 - 5 * CONFIG.defenderBonus)) < 0.01);
+  assert(Math.abs(g.cities[I.oxford].n - (40 - 5 * CONFIG.defenderBonus)) < 0.01);
+  assert(g.cities[I.london].n > 0, 'London starts producing again from zero');
+});
+
+test('send: the old half-and-keep-one rule still works if CONFIG asks for it', () => {
+  const saved = [CONFIG.sendFraction, CONFIG.sendKeeps];
+  try {
+    CONFIG.sendFraction = 0.5; CONFIG.sendKeeps = 1;
+    const g = game();
+    g.cities[I.london].n = 40;
+    Sim.send(g, 'amy', [I.london], I.oxford);
+    assert.strictEqual(g.cities[I.london].n, 20);
+    g.cities[I.cambridge].n = 1;
+    assert(!Sim.send(g, 'amy', [I.cambridge], I.london), 'must leave one behind');
+  } finally { [CONFIG.sendFraction, CONFIG.sendKeeps] = saved; }
 });
 
 test('combat: defenders count 1.1x and keep the city when attackers fall short', () => {
   const g = game();
-  g.cities[I.london].n = 41;       // sends 20
+  g.cities[I.london].n = 20;       // sends 20
   g.cities[I.oxford].n = 19;       // defends as 20.9
   Sim.send(g, 'amy', [I.london], I.oxford);
   until(g, () => g.fleets.length === 0);
@@ -107,8 +122,8 @@ test('cheating: cannot send from cities you do not own, through enemy cities, or
   assert(!Sim.send(g, 'amy', 'london', I.oxford));
   assert(!Sim.send(g, 'amy', [I.london], 999));
   assert(!Sim.send(g, 'zed', [I.london], I.oxford));
-  g.cities[I.london].n = 1;
-  assert(!Sim.send(g, 'amy', [I.london], I.oxford), 'must leave one behind');
+  g.cities[I.london].n = 0.9;
+  assert(!Sim.send(g, 'amy', [I.london], I.oxford), 'nothing to send from an empty city');
   assert(!Sim.send(g, 'amy', [I.cambridge, I.cambridge, I.cambridge], I.london) || g.fleets.length === 1, 'duplicates send once');
 });
 
@@ -300,7 +315,7 @@ test('end screen stats count captures, troops sent and peak cities', () => {
   Sim.send(g, 'amy', [I.london], I.oxford);
   until(g, () => g.fleets.length === 0);
   assert.strictEqual(g.players.amy.stats.taken, 1);
-  assert.strictEqual(g.players.amy.stats.sent, 30);
+  assert.strictEqual(g.players.amy.stats.sent, 60);
   assert.strictEqual(g.players.amy.stats.peak, 4);
   Sim.step(g); g.phase = 'over';
   assert.strictEqual(Sim.snapshot(g).c[I.london][2], 1, 'snapshot carries the level');
@@ -458,6 +473,7 @@ test('speed: troops sent while it lasts travel twice as fast', () => {
   Sim.send(g, 'amy', [I.london], I.oxford);
   const slow = g.fleets[0].t1 - g.fleets[0].t0;
   assert(Sim.usePower(g, 'amy', 0));
+  g.cities[I.london].n = 60;
   Sim.send(g, 'amy', [I.london], I.oxford);
   const fast = g.fleets[1].t1 - g.fleets[1].t0;
   assert(Math.abs(fast * 2 - slow) <= 2, slow + ' vs ' + fast);
