@@ -117,10 +117,15 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 <script id="config">
 'use strict';
 const CONFIG = {
-  version: '0.7',
+  version: '0.8',
   maxPlayers: 4,
   minPlayers: 2,              // the host can still start alone for a practice run
   modes: { ffa: 'Free for all', teams: '2 v 2' },
+  bots: {                     // computer players the host can add to fill empty seats
+    thinkSeconds: 1.2,        // how often a bot looks at the map
+    attackChance: 0.7,        // how keen it is to attack when it can win
+    names: ['Nigel', 'Sharon', 'Big Dave', 'Auntie Pat', 'Gaz', 'Brenda', 'Terry', 'Shazza'],
+  },
   powerups: {                 // earned by capturing cities, held in two slots, used with a tap
     capturesPerPowerup: 3,
     maxHeld: 2,
@@ -175,6 +180,9 @@ const CONFIG = {
 <!-- INLINE:map-uk -->
 <script type="application/json" id="map-uk">{"id":"uk","name":"United Kingdom","territories":true,"southLine":680,"prizeCity":"birmingham","width":600,"height":899,"land":[[[567.5,773.8],[571.6,748.4],[540.9,738.3],[532,726.1],[546.8,707.8],[563.3,690.5],[583.4,665.1],[591.1,636.7],[590,614.4],[564.5,591],[517.2,586.9],[499.5,602.2],[508.4,568.7],[494.8,523],[483,470.2],[464,453.9],[451,433.6],[419.7,418.4],[406.7,391],[403.7,375.7],[387.2,335.1],[369.5,302.6],[361.8,289.4],[339.9,279.3],[325.1,273.2],[298.5,281.3],[274.9,276.2],[304.4,267.1],[335.2,250.8],[319.2,235.6],[335.2,222.4],[341.7,207.2],[357.6,181.8],[365.3,162.5],[382.5,126.9],[369.5,107.6],[338.7,108.7],[293.8,104.6],[258.9,116.8],[239.4,126.9],[251.2,106.6],[251.2,89.4],[271.9,64],[305.6,31.5],[309.2,11.2],[279.6,15.2],[192.1,13.2],[177.3,60.9],[171.4,86.3],[150.7,103.6],[143.6,134],[149.6,149.3],[143.1,177.7],[120,206.1],[164.3,237.6],[156.7,279.3],[144.8,350.3],[165.5,325],[192.1,294.5],[206.9,284.3],[214,334.1],[200.4,356.4],[183.3,396],[200.4,417.4],[248.3,398.1],[280.8,383.9],[298.5,385.9],[280.8,409.2],[273.1,432.6],[296.7,472.2],[317.4,475.2],[307.4,500.6],[310.3,517.9],[307.4,538.2],[301.5,545.3],[304.4,558.5],[261.3,550.4],[239.4,553.4],[215.8,543.3],[218.7,568.7],[206.9,604.2],[248.3,612.3],[246.5,643.8],[211.6,675.3],[174.4,697.6],[189.2,715.9],[209.9,719],[233.5,715.9],[233.5,729.1],[254.2,726.1],[269,738.3],[300.3,741.3],[313.3,731.1],[334,724],[326.9,736.2],[311.5,753.5],[283.7,766.7],[261.3,763.6],[219.9,787],[218.7,804.3],[196.3,832.7],[187.4,845.9],[163.7,867.2],[150.1,882.5],[180.3,892.6],[188,873.3],[214,855],[242.4,852],[272.5,866.2],[279.6,842.8],[286.7,825.6],[314.5,815.4],[342.9,835.7],[372.4,827.6],[378.3,815.4],[404.9,807.3],[423.8,809.3],[441,814.4],[479.4,805.3],[502.5,814.4],[521.4,802.2],[545,796.1],[557.4,778.9]]],"ni":[[[59.1,373.7],[79.8,363.5],[124.1,358.5],[147.8,396],[159.6,416.3],[165.5,441.7],[153.7,460],[127.1,479.3],[97.5,477.3],[73.9,462],[41.4,470.2],[5.9,436.7],[29.6,421.4],[41.4,406.2],[47.3,385.9]]],"ireland":[[[52,342.2],[124.1,358.5],[147.8,396],[159.6,416.3],[165.5,441.7],[153.7,460],[127.1,482.4],[127.1,548.4],[133,586.9],[111.7,668.2],[73.9,672.2],[-3,705.8],[-44.3,726.1],[-73.9,655],[-44.3,563.6],[-79.8,462],[-20.7,451.9],[-32.5,421.4],[-3,365.6]]],"cities":[{"id":"london","name":"London","x":484,"y":734,"size":"L"},{"id":"birmingham","name":"Birmingham","x":364,"y":656,"size":"L"},{"id":"manchester","name":"Manchester","x":328,"y":518,"size":"L"},{"id":"glasgow","name":"Glasgow","x":231,"y":294,"size":"L"},{"id":"bristol","name":"Bristol","x":357,"y":744,"size":"L"},{"id":"leeds","name":"Leeds","x":384,"y":461,"size":"M"},{"id":"liverpool","name":"Liverpool","x":272,"y":568,"size":"M"},{"id":"sheffield","name":"Sheffield","x":422,"y":526,"size":"M"},{"id":"newcastle","name":"Newcastle","x":393,"y":384,"size":"M"},{"id":"nottingham","name":"Nottingham","x":417,"y":592,"size":"M"},{"id":"edinburgh","name":"Edinburgh","x":302,"y":294,"size":"M"},{"id":"cardiff","name":"Cardiff","x":288,"y":736,"size":"M"},{"id":"brighton","name":"Brighton","x":478,"y":794,"size":"M"},{"id":"leicester","name":"Leicester","x":454,"y":644,"size":"S"},{"id":"stoke","name":"Stoke","x":352,"y":586,"size":"S"},{"id":"hull","name":"Hull","x":479,"y":522,"size":"S"},{"id":"york","name":"York","x":449,"y":469,"size":"S"},{"id":"norwich","name":"Norwich","x":565,"y":622,"size":"S"},{"id":"cambridge","name":"Cambridge","x":501,"y":665,"size":"S"},{"id":"oxford","name":"Oxford","x":418,"y":710,"size":"S"},{"id":"southampton","name":"Southampton","x":404,"y":788,"size":"S"},{"id":"exeter","name":"Exeter","x":285,"y":817,"size":"S"},{"id":"plymouth","name":"Plymouth","x":242,"y":840,"size":"S"},{"id":"swansea","name":"Swansea","x":237,"y":707,"size":"S"},{"id":"carlisle","name":"Carlisle","x":315,"y":392,"size":"S"},{"id":"aberdeen","name":"Aberdeen","x":354,"y":166,"size":"S"},{"id":"inverness","name":"Inverness","x":242,"y":142,"size":"S"},{"id":"belfast","name":"Belfast","x":137,"y":421,"size":"M"},{"id":"preston","name":"Preston","x":292,"y":462,"size":"S"},{"id":"wrexham","name":"Wrexham","x":232,"y":604,"size":"S"}],"links":[["york","hull"],["plymouth","exeter"],["cambridge","leicester"],["oxford","leicester"],["leicester","nottingham"],["york","leeds"],["swansea","cardiff"],["stoke","nottingham"],["york","sheffield"],["hull","sheffield"],["nottingham","sheffield"],["sheffield","leeds"],["stoke","manchester"],["stoke","birmingham"],["leicester","birmingham"],["oxford","london"],["oxford","bristol"],["cambridge","london"],["stoke","liverpool"],["southampton","bristol"],["cardiff","bristol"],["leeds","manchester"],["liverpool","manchester"],["manchester","sheffield"],["edinburgh","glasgow"],["brighton","london"],["oxford","birmingham"],["southampton","brighton"],["nottingham","birmingham"],["cambridge","norwich"],["newcastle","leeds"],["carlisle","newcastle"],["southampton","oxford"],["bristol","birmingham"],["southampton","london"],["york","newcastle"],["exeter","bristol"],["carlisle","edinburgh"],["carlisle","glasgow"],["inverness","aberdeen"],["norwich","hull"],["edinburgh","newcastle"],["aberdeen","edinburgh"],["norwich","london"],["swansea","birmingham"],["inverness","glasgow"],["inverness","edinburgh"],["glasgow","belfast"],["preston","manchester"],["preston","liverpool"],["wrexham","liverpool"],["wrexham","stoke"]],"teamSlots":[[0,3],[1,2]],"seaLinks":[["glasgow","belfast"]],"slots":[{"name":"South East","cities":["london","brighton","cambridge"]},{"name":"North West","cities":["manchester","liverpool","stoke"]},{"name":"Scotland","cities":["glasgow","edinburgh","carlisle"]},{"name":"South West","cities":["bristol","cardiff","exeter"]}],"islands":[[[394.3,820.5],[410.8,810.4],[424.4,819.5],[410.8,829.6]],[[203.9,476.3],[230,439.7],[233.5,451.9],[214.6,476.3]],[[124.1,157.4],[153.7,152.3],[133,106.6],[112.3,108.7],[97.5,121.9],[91.6,137.1]],[[112.3,248.8],[150.7,233.6],[133,213.3],[112.3,223.4]],[[103.4,311.8],[127.1,314.8],[127.1,289.4],[109.4,294.5]],[[133,294.5],[150.7,269.1],[141.9,267.1],[130,289.4]],[[171.4,309.7],[186.2,317.8],[183.3,337.1],[168.5,330]],[[121.2,25.4],[124.1,50.8],[109.4,76.2],[79.8,96.5],[68,81.2],[79.8,45.7],[118.2,23.4]],[[62.1,106.6],[65,137.1],[56.2,167.6],[47.3,137.1],[44.3,111.7]]]}</script>
 <!-- /INLINE:map-uk -->
+<!-- INLINE:map-england -->
+<script type="application/json" id="map-england">{"id":"england","name":"England","width":600,"height":759,"territories":true,"southLine":502,"prizeCity":"birmingham","land":[[[247.5,558.1],[227.9,579.4],[192.5,595.7],[163.8,591.9],[110.9,620.8],[109.4,642.1],[80.8,677.2],[69.4,693.5],[39.2,719.8],[21.9,738.6],[60.4,751.2],[70.2,727.4],[103.4,704.8],[139.6,701],[178.1,718.6],[187.2,689.7],[196.2,668.4],[231.7,655.9],[267.9,681],[305.7,670.9],[313.2,655.9],[347.2,645.8],[371.3,648.4],[393.2,654.6],[442.3,643.3],[471.7,654.6],[495.8,639.6],[526,632.1],[541.9,610.7],[554.7,604.5],[560,573.1],[520.8,560.6],[509.4,545.5],[528.3,522.9],[549.4,501.6],[575.1,470.3],[584.9,435.2],[583.4,407.6],[550.9,378.7],[490.6,373.7],[467.9,392.5],[479.2,351.1],[461.9,294.7],[446.8,229.5],[422.6,209.4],[406,184.3],[366,165.5],[349.4,131.7],[345.7,112.9],[324.5,62.7],[301.9,22.6],[283,37.6],[256.6,81.5],[234,112.9],[222.6,121.6],[211.3,125.4],[188.7,154.3],[178.9,183.1],[209.1,232],[235.5,235.8],[222.6,267.1],[226.4,288.4],[222.6,313.5],[215.1,322.3],[218.9,338.6],[230.2,344.9],[226.4,382.5],[215.1,420.1],[222.6,451.5],[218.9,486.6],[247.5,517.9],[251.3,540.5]]],"ni":[],"foreign":[[[554.7,604.5],[560,573.1],[520.8,560.6],[509.4,545.5],[528.3,522.9],[549.4,501.6],[575.1,470.3],[584.9,435.2],[583.4,407.6],[550.9,378.7],[490.6,373.7],[467.9,392.5],[479.2,351.1],[461.9,294.7],[446.8,229.5],[422.6,209.4],[406,184.3],[366,165.5],[349.4,131.7],[345.7,112.9],[324.5,62.7],[301.9,22.6],[292.1,6.3],[264.2,-6.3],[245.3,-13.8],[211.3,-3.8],[181.1,-10],[218.9,-21.3],[258.1,-41.4],[237.7,-60.2],[258.1,-76.5],[266.4,-95.3],[286.8,-126.7],[296.6,-150.5],[318.5,-194.4],[301.9,-218.2],[262.6,-217],[205.3,-222],[160.8,-206.9],[135.8,-194.4],[150.9,-219.5],[150.9,-240.8],[177.4,-272.1],[220.4,-312.3],[224.9,-337.3],[187.2,-332.3],[75.5,-334.8],[56.6,-275.9],[49.1,-244.5],[22.6,-223.2],[13.6,-185.6],[21.1,-166.8],[12.8,-131.7],[-16.6,-96.6],[40,-57.7],[30.2,-6.3],[15.1,81.5],[41.5,50.2],[75.5,12.5],[94.3,0],[103.4,61.4],[86,89],[64.2,137.9],[86,164.3],[147.2,140.5],[188.7,122.9],[211.3,125.4],[188.7,154.3],[178.9,183.1],[209.1,232],[235.5,235.8],[222.6,267.1],[226.4,288.4],[222.6,313.5],[215.1,322.3],[218.9,338.6],[163.8,328.6],[135.8,332.3],[105.7,319.8],[109.4,351.1],[94.3,395],[147.2,405.1],[144.9,443.9],[100.4,482.8],[52.8,510.4],[71.7,533],[98.1,536.7],[128.3,533],[128.3,549.3],[154.7,545.5],[173.6,560.6],[213.6,564.3],[230.2,551.8],[256.6,543],[247.5,558.1],[227.9,579.4],[192.5,595.7],[163.8,591.9],[110.9,620.8],[109.4,642.1],[80.8,677.2],[69.4,693.5],[39.2,719.8],[21.9,738.6],[60.4,751.2],[70.2,727.4],[103.4,704.8],[139.6,701],[178.1,718.6],[187.2,689.7],[196.2,668.4],[231.7,655.9],[267.9,681],[305.7,670.9],[313.2,655.9],[347.2,645.8],[371.3,648.4],[393.2,654.6],[442.3,643.3],[471.7,654.6],[495.8,639.6],[526,632.1],[541.9,610.7]],[[-103.4,71.5],[-11.3,91.5],[18.9,137.9],[34,163],[41.5,194.4],[26.4,217],[-7.5,244.5],[-7.5,326.1],[0,373.7],[-27.2,474],[-75.5,479.1],[-173.6,520.4],[-226.4,545.5],[-264.2,457.7],[-226.4,344.9],[-271.7,219.5],[-196.2,206.9],[-211.3,169.3],[-173.6,100.3]]],"islands":[[[333.6,662.1],[354.7,649.6],[372.1,660.9],[354.7,673.4]]],"cities":[{"id":"london","name":"London","x":443,"y":557,"size":"L"},{"id":"birmingham","name":"Birmingham","x":282,"y":446,"size":"L"},{"id":"manchester","name":"Manchester","x":285,"y":308,"size":"L"},{"id":"bristol","name":"Bristol","x":252,"y":573,"size":"L"},{"id":"newcastle","name":"Newcastle","x":327,"y":116,"size":"M"},{"id":"leeds","name":"Leeds","x":323,"y":247,"size":"M"},{"id":"liverpool","name":"Liverpool","x":236,"y":322,"size":"M"},{"id":"sheffield","name":"Sheffield","x":358,"y":307,"size":"M"},{"id":"nottingham","name":"Nottingham","x":353,"y":376,"size":"M"},{"id":"brighton","name":"Brighton","x":446,"y":641,"size":"M"},{"id":"southampton","name":"Southampton","x":331,"y":620,"size":"M"},{"id":"middlesbrough","name":"Middlesbrough","x":364,"y":180,"size":"M"},{"id":"exeter","name":"Exeter","x":188,"y":655,"size":"M"},{"id":"leicester","name":"Leicester","x":398,"y":422,"size":"S"},{"id":"coventry","name":"Coventry","x":350,"y":459,"size":"S"},{"id":"stoke","name":"Stoke","x":287,"y":377,"size":"S"},{"id":"hull","name":"Hull","x":435,"y":283,"size":"S"},{"id":"york","name":"York","x":388,"y":242,"size":"S"},{"id":"norwich","name":"Norwich","x":551,"y":416,"size":"S"},{"id":"cambridge","name":"Cambridge","x":462,"y":469,"size":"S"},{"id":"oxford","name":"Oxford","x":358,"y":527,"size":"S"},{"id":"portsmouth","name":"Portsmouth","x":383,"y":643,"size":"S"},{"id":"plymouth","name":"Plymouth","x":139,"y":700,"size":"S"},{"id":"carlisle","name":"Carlisle","x":232,"y":133,"size":"S"},{"id":"preston","name":"Preston","x":235,"y":260,"size":"S"},{"id":"lincoln","name":"Lincoln","x":414,"y":342,"size":"S"},{"id":"ipswich","name":"Ipswich","x":540,"y":488,"size":"S"},{"id":"gloucester","name":"Gloucester","x":291,"y":515,"size":"S"}],"links":[["coventry","leicester"],["york","hull"],["lincoln","hull"],["leicester","nottingham"],["portsmouth","southampton"],["york","leeds"],["preston","liverpool"],["portsmouth","brighton"],["plymouth","exeter"],["lincoln","sheffield"],["stoke","nottingham"],["york","middlesbrough"],["gloucester","oxford"],["oxford","coventry"],["coventry","birmingham"],["stoke","birmingham"],["stoke","manchester"],["nottingham","sheffield"],["preston","manchester"],["sheffield","leeds"],["gloucester","bristol"],["gloucester","birmingham"],["lincoln","nottingham"],["york","sheffield"],["ipswich","norwich"],["leeds","manchester"],["manchester","sheffield"],["liverpool","manchester"],["middlesbrough","newcastle"],["middlesbrough","leeds"],["cambridge","leicester"],["ipswich","cambridge"],["hull","sheffield"],["gloucester","coventry"],["lincoln","leicester"],["brighton","london"],["preston","leeds"],["cambridge","london"],["oxford","london"],["southampton","bristol"],["stoke","liverpool"],["oxford","southampton"],["carlisle","newcastle"],["birmingham","nottingham"],["cambridge","norwich"],["exeter","bristol"],["brighton","southampton"],["ipswich","london"],["middlesbrough","hull"],["preston","carlisle"],["newcastle","leeds"],["norwich","leicester"],["plymouth","bristol"]],"seaLinks":[],"slots":[{"name":"South East","cities":["london","brighton","cambridge"]},{"name":"North West","cities":["manchester","liverpool","preston"]},{"name":"North East","cities":["newcastle","middlesbrough","carlisle"]},{"name":"South West","cities":["bristol","exeter","plymouth"]}],"teamSlots":[[0,3],[1,2]]}</script>
+<!-- /INLINE:map-england -->
 
 <!-- ======================================================================
      SIM: the authoritative game. Runs only on the host; pure data in and out, so it also runs in Node tests.
@@ -184,8 +192,10 @@ const CONFIG = {
 'use strict';
 const Sim = (() => {
   let MAP = null, ADJ = null, LEN = null, IDX = null;
+  const MAPS = {};   // every map this Sim knows, by id; the first one added is the default
 
   function setMap(map) {
+    if (!MAPS[map.id]) MAPS[map.id] = map;
     MAP = map;
     IDX = {};
     map.cities.forEach((c, i) => { IDX[c.id] = i; });
@@ -199,11 +209,23 @@ const Sim = (() => {
     }
   }
   const map = () => MAP;
+  const maps = () => Object.values(MAPS).map(m => ({ id: m.id, name: m.name }));
+  // Make sure the Sim is on this game's map (a host that refreshed comes back on the right one).
+  function useMapOf(g) {
+    const id = g.mapId || Object.keys(MAPS)[0];
+    if (MAPS[id] && MAP !== MAPS[id]) setMap(MAPS[id]);
+  }
+  function setMapChoice(g, id) {
+    if (g.phase !== 'lobby' || !MAPS[id] || g.mapId === id) return false;
+    g.mapId = id;
+    useMapOf(g);
+    return true;
+  }
   const adj = i => ADJ[i];
   const linkLen = (i, j) => LEN[i + ',' + j];
 
   function createGame() {
-    return { phase: 'lobby', mode: 'ffa', chaos: true, chaosOn: [], nextChaosAt: 0, players: {}, t: 0, cities: [], fleets: [], nextFleet: 1, events: [], nextEvent: 1, winner: null, winTeam: null, endReason: null, startN: 0 };
+    return { spectators: {}, phase: 'lobby', mode: 'ffa', chaos: true, chaosOn: [], nextChaosAt: 0, players: {}, t: 0, cities: [], fleets: [], nextFleet: 1, events: [], nextEvent: 1, winner: null, winTeam: null, endReason: null, startN: 0 };
   }
   const list = g => Object.values(g.players).sort((a, b) => a.idx - b.idx);
   const teams = g => g.mode === 'teams';
@@ -219,8 +241,13 @@ const Sim = (() => {
   function addPlayer(g, id, name) {
     const p = g.players[id];
     if (p) { p.name = name || p.name; p.connected = true; p.goneAt = null; return { ok: true }; }
-    if (g.phase !== 'lobby') return { err: 'started' };
-    if (Object.keys(g.players).length >= CONFIG.maxPlayers) return { err: 'full' };
+    // A match already on, or no seats left: come in and watch instead.
+    if (g.phase !== 'lobby' || Object.keys(g.players).length >= CONFIG.maxPlayers) {
+      g.spectators = g.spectators || {};
+      g.spectators[id] = { id, name };
+      return { ok: true, spectator: true };
+    }
+    if (g.spectators) delete g.spectators[id];
     const used = new Set(list(g).map(q => q.idx));
     let idx = 0;
     while (used.has(idx)) idx++;
@@ -232,6 +259,7 @@ const Sim = (() => {
 
   // Returns true if anything visible changed.
   function setConnected(g, id, on) {
+    if (g.spectators && g.spectators[id] && !g.players[id]) { if (!on) delete g.spectators[id]; return !on; }
     const p = g.players[id];
     if (!p) return false;
     if (!on && g.phase === 'lobby') { delete g.players[id]; return true; }
@@ -241,6 +269,65 @@ const Sim = (() => {
     return true;
   }
   const frozen = (g, p) => !p.connected && p.goneAt !== null && g.t - p.goneAt >= CONFIG.dropGraceSeconds * 1000;
+
+  // ---- bots: computer players run by the host ----
+  function addBot(g, rand = Math.random) {
+    if (g.phase !== 'lobby' || Object.keys(g.players).length >= CONFIG.maxPlayers) return false;
+    const taken = new Set(list(g).map(p => p.name));
+    const free = CONFIG.bots.names.filter(n => !taken.has(n));
+    let k = 1;
+    while (g.players['bot' + k]) k++;
+    const id = 'bot' + k;
+    addPlayer(g, id, free.length ? free[Math.floor(rand() * free.length)] : 'Bot ' + k);
+    g.players[id].bot = true;
+    return true;
+  }
+  function removeBot(g, id) {
+    const p = g.players[id];
+    if (g.phase !== 'lobby' || !p || !p.bot) return false;
+    delete g.players[id];
+    return true;
+  }
+  // A greedy bot: attack the weakest neighbour it can beat, feed spare troops to the front line
+  // (a teammate's too), upgrade when safe, and use power-ups as soon as there's a sensible target.
+  function botThink(g, p, rand = Math.random) {
+    const B = CONFIG.bots;
+    const ally = o => allied(g, o, p.idx);
+    const mine = g.cities.map((c, i) => i).filter(i => g.cities[i].o === p.idx);
+    const front = j => ADJ[j].some(k => !ally(g.cities[k].o));
+    // Power-ups first.
+    p.powers.forEach((kind, slot) => {
+      if (kind === 'speed') usePower(g, p.id, slot);
+      else if (kind === 'shield') {
+        const threatened = mine.filter(i => ADJ[i].some(k => g.cities[k].o >= 0 && !ally(g.cities[k].o)))
+          .sort((a, b) => g.cities[b].n - g.cities[a].n)[0];
+        if (threatened !== undefined) usePower(g, p.id, slot, threatened);
+      } else if (kind === 'sabotage') {
+        const enemy = g.cities.map((c, i) => i).filter(i => g.cities[i].o >= 0 && !ally(g.cities[i].o) && ADJ[i].some(k => g.cities[k].o === p.idx))
+          .sort((a, b) => g.cities[b].n - g.cities[a].n)[0];
+        if (enemy !== undefined) usePower(g, p.id, slot, enemy);
+      }
+    });
+    for (const s of mine) {
+      const c = g.cities[s];
+      const foes = ADJ[s].filter(j => !ally(g.cities[j].o) && !blocked(g, s, j));
+      const hit = foes.filter(j => !shielded(g, g.cities[j]) && Math.floor(c.n * CONFIG.sendFraction) > g.cities[j].n * CONFIG.defenderBonus + 2)
+        .sort((a, b) => g.cities[a].n - g.cities[b].n)[0];
+      if (hit !== undefined && rand() < B.attackChance) { send(g, p.id, [s], hit); continue; }
+      const enemiesNear = foes.some(j => g.cities[j].o >= 0);
+      const cost = CONFIG.upgradeCost[(c.lv || 1) + 1];
+      if (cost && !enemiesNear && c.n > cost + 10 && rand() < 0.3) { upgrade(g, p.id, s); continue; }
+      if (!foes.length && c.n > 20) {
+        const fronts = ADJ[s].filter(j => ally(g.cities[j].o) && front(j));
+        if (fronts.length) send(g, p.id, [s], fronts[Math.floor(rand() * fronts.length)]);
+      }
+    }
+  }
+  function runBots(g) {
+    const every = Math.max(1, Math.round(CONFIG.bots.thinkSeconds * 1000 / CONFIG.tickMs));
+    const tick = Math.round(g.t / CONFIG.tickMs);
+    for (const p of list(g)) if (p.bot && !p.out && (tick + p.idx * 3) % every === 0) botThink(g, p);
+  }
 
   function setChaos(g, on) {
     if (g.phase !== 'lobby' || g.chaos === !!on) return false;
@@ -353,6 +440,7 @@ const Sim = (() => {
 
   function start(g, rand = Math.random) {
     if (!canStart(g)) return false;
+    useMapOf(g);
     const ps = list(g);
     // Random start corners each match. In 2 v 2 each team gets a pair of neighbouring corners (north or south).
     const slots = MAP.slots.map((s, i) => i);
@@ -515,11 +603,13 @@ const Sim = (() => {
   // One fixed simulation step. Returns true (state always moves while playing).
   function step(g) {
     if (g.phase !== 'play') return false;
+    useMapOf(g);
     const dt = CONFIG.tickMs / 1000;
     const wasOT = overtime(g);
     g.t += CONFIG.tickMs;
     if (!wasOT && overtime(g)) event(g, { k: 'ot' });
     updateChaos(g);
+    runBots(g);
     const boost = overtime(g) ? CONFIG.overtimeBoost : 1;
     const own = {};
     for (const p of list(g)) own[p.idx] = p;
@@ -623,6 +713,12 @@ const Sim = (() => {
   function toLobby(g) {
     g.phase = 'lobby'; g.cities = []; g.fleets = []; g.events = []; g.winner = null; g.winTeam = null; g.endReason = null; g.t = 0;
     for (const [id, p] of Object.entries(g.players)) { if (!p.connected) delete g.players[id]; else p.out = false; }
+    // Watchers take any free seats for the next match.
+    for (const s of Object.values(g.spectators || {})) {
+      if (Object.keys(g.players).length >= CONFIG.maxPlayers) break;
+      delete g.spectators[s.id];
+      addPlayer(g, s.id, s.name);
+    }
   }
   // Same players, same mode and teams, straight into a new match.
   function rematch(g, rand) {
@@ -642,13 +738,15 @@ const Sim = (() => {
   function snapshot(g) {
     const owned = counts(g);
     return {
+      mapId: g.mapId || Object.keys(MAPS)[0], maps: maps(),
       awards: g.phase === 'over' ? g.awards || [] : undefined,
+      watchers: Object.values(g.spectators || {}).map(s => ({ id: s.id, name: s.name })),
       phase: g.phase, mode: g.mode, t: g.t, winner: g.winner, winTeam: g.winTeam, endReason: g.endReason, startN: g.startN, map: MAP.id,
       chaos: g.chaos, on: (g.chaosOn || []).map(e => ({ k: e.k, until: e.until, links: e.links })),
       end: CONFIG.matchSeconds * 1000, ot: overtime(g), problem: g.phase === 'lobby' ? startProblem(g) : '',
       players: list(g).map(p => ({
         id: p.id, name: p.name, idx: p.idx, team: p.team, colour: colourOf(g, p), connected: p.connected, frozen: frozen(g, p), out: !!p.out,
-        powers: p.powers || [], charge: p.charge || 0, fast: !!p.speedUntil && p.speedUntil > g.t,
+        bot: !!p.bot, powers: p.powers || [], charge: p.charge || 0, fast: !!p.speedUntil && p.speedUntil > g.t,
         cities: owned[p.idx] || 0, stats: g.phase === 'over' ? p.stats : undefined,
       })),
       c: g.cities.map(c => [c.o, Math.floor(c.n), c.lv || 1, shielded(g, c) ? 1 : 0, sabotaged(g, c) ? 1 : 0]),
@@ -657,7 +755,7 @@ const Sim = (() => {
     };
   }
 
-  return { setMap, map, adj, linkLen, route, createGame, setChaos, chaos, blocked, usePower, earn, addPlayer, setConnected, setMode, setTeam, upgrade, upgradeProblem, cityCap, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
+  return { setMap, map, maps, setMapChoice, useMapOf, adj, linkLen, route, createGame, setChaos, chaos, blocked, usePower, earn, addBot, removeBot, botThink, addPlayer, setConnected, setMode, setTeam, upgrade, upgradeProblem, cityCap, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
 })();
 </script>
 
@@ -755,7 +853,10 @@ const Net = (() => {
 (() => {
   const $app = document.getElementById('app');
   const $banner = document.getElementById('banner');
-  const MAP = JSON.parse(document.getElementById('map-uk').textContent);
+  const MAPS = {};
+  document.querySelectorAll('script[id^="map-"]').forEach(el => { const m = JSON.parse(el.textContent); MAPS[m.id] = m; });
+  let MAP = MAPS.uk;
+  for (const m of Object.values(MAPS)) Sim.setMap(m);   // register them all
   Sim.setMap(MAP);
 
   const area = n => { try { return window[n]; } catch (e) { return null; } };
@@ -788,6 +889,9 @@ const Net = (() => {
   const banner = t => { $banner.textContent = t || ''; };
 
   function onSnapshot(s) {
+    // The host picked another map: switch to it and rebuild the board.
+    const want = s.phase === 'lobby' ? s.mapId : s.map;
+    if (want && MAPS[want] && MAP !== MAPS[want]) { MAP = MAPS[want]; Sim.setMap(MAP); Game.teardown(); }
     const local = performance.now();
     const sample = local - s.t;
     if (clockOffset === null || sample < clockOffset || (snap && s.t < snap.t)) clockOffset = sample;
@@ -873,7 +977,7 @@ const Net = (() => {
       last = t;
       let changed = false;
       for (const p of Object.values(game.players)) {
-        if (p.id !== meId && p.connected && Date.now() - (seen[p.id] || 0) > CONFIG.idleAfterSeconds * 1000) changed = Sim.setConnected(game, p.id, false) || changed;
+        if (p.id !== meId && !p.bot && p.connected && Date.now() - (seen[p.id] || 0) > CONFIG.idleAfterSeconds * 1000) changed = Sim.setConnected(game, p.id, false) || changed;
       }
       while (acc >= CONFIG.tickMs) { acc -= CONFIG.tickMs; if (Sim.step(game)) changed = true; }
       if (changed) broadcast();
@@ -887,11 +991,14 @@ const Net = (() => {
       else if (type === 'lobby') { Sim.toLobby(game); ok = true; }
       else if (type === 'rematch') ok = Sim.rematch(game);
       else if (type === 'mode') ok = Sim.setMode(game, data);
+      else if (type === 'map') ok = Sim.setMapChoice(game, data);
       else if (type === 'team') ok = Sim.setTeam(game, meId, data);
       else if (type === 'upgrade') ok = Sim.upgrade(game, meId, data);
       else if (type === 'power') ok = Sim.usePower(game, meId, data.slot, data.target);
       else if (type === 'shuffle') ok = Sim.shuffleTeams(game);
       else if (type === 'chaos') ok = Sim.setChaos(game, data);
+      else if (type === 'bot') ok = Sim.addBot(game);
+      else if (type === 'unbot') ok = Sim.removeBot(game, data);
       if (ok) broadcast();
     }
     return { isHost: true, act, destroy, me: meId, get code() { return code; } };
@@ -989,11 +1096,14 @@ const Net = (() => {
   }
 
   const playerSlot = (p, badge) => `<div class="slot"><span class="dot" style="background:${p.colour}">${shapeOf(p.idx)}</span>
-    <span>${esc(p.name)}${p.id === session.me ? ' <span class="muted small">(you)</span>' : ''}</span><span class="badge">${badge || ''}</span></div>`;
+    <span>${p.bot ? '🤖 ' : ''}${esc(p.name)}${p.id === session.me ? ' <span class="muted small">(you)</span>' : ''}</span><span class="badge">${badge || ''}</span>
+    ${p.bot && session.isHost ? `<button class="ghost" data-act="unbot" data-id="${esc(p.id)}" aria-label="Remove bot" style="min-height:36px;padding:0 6px;margin-left:auto">✕</button>` : ''}</div>`;
 
   function renderLobby(s) {
     const n = s.players.length, teams = s.mode === 'teams';
     const mine = s.players.find(p => p.id === session.me) || {};
+    const mapSeg = (s.maps || []).length > 1 ? `<div class="seg">${s.maps.map(m =>
+      `<button class="${s.mapId === m.id ? 'on' : ''}" data-act="map" data-map="${m.id}" ${session.isHost ? '' : 'disabled'}>${esc(m.name)}</button>`).join('')}</div>` : '';
     const modes = Object.entries(CONFIG.modes).map(([k, label]) =>
       `<button class="${s.mode === k ? 'on' : ''}" data-act="mode" data-mode="${k}" ${session.isHost ? '' : 'disabled'}>${label}</button>`).join('');
     let roster;
@@ -1023,12 +1133,15 @@ const Net = (() => {
       <p class="muted center" style="margin-top:12px">Room code</p>
       <div class="bigcode">${esc(session.code || '····')}</div>
       <button class="ghost" data-act="share">Copy invite link</button>
+      ${mapSeg}
       <div class="seg">${modes}</div>
       <div class="toggle"><span>Chaos events <span class="muted small">(rail strikes, Greggs openings…)</span></span>${session.isHost
         ? `<button data-act="chaos" class="${s.chaos ? 'primary' : ''}">${s.chaos ? 'On' : 'Off'}</button>`
         : `<span class="muted">${s.chaos ? 'On' : 'Off'}</span>`}</div>
       <p class="muted small center">${rule} ${mins} minute limit, then most cities wins. Production speeds up after ${ot} minutes.</p>
       ${roster}
+      ${session.isHost && n < CONFIG.maxPlayers ? '<button class="ghost" data-act="bot">+ Add a bot</button>' : ''}
+      ${(s.watchers || []).length ? `<p class="muted small center">👀 Watching: ${s.watchers.map(w => esc(w.name)).join(', ')}${s.watchers.some(w => w.id === session.me) ? ' (you). You’ll get a seat when one frees up.' : ''}</p>` : ''}
       <div class="grow"></div>
       ${session.isHost
         ? `<button class="primary" data-act="start" ${s.problem ? 'disabled' : ''}>${startLabel}</button>
@@ -1041,7 +1154,7 @@ const Net = (() => {
   function show(s, prev) {
     if (s.phase === 'lobby') {
       Game.teardown();
-      const key = JSON.stringify([s.players, s.mode, s.problem, s.chaos, session.code]);
+      const key = JSON.stringify([s.players, s.watchers, s.mapId, s.mode, s.problem, s.chaos, session.code]);
       if (!prev || prev.phase !== 'lobby' || key !== lobbyKey || !$app.querySelector('.bigcode')) { lobbyKey = key; renderLobby(s); }
     } else {
       if (!Game.el) Game.build();
@@ -1070,9 +1183,12 @@ const Net = (() => {
     else if (a === 'lobby') session.act('lobby');
     else if (a === 'rematch') session.act('rematch');
     else if (a === 'mode') session.act('mode', b.dataset.mode);
+    else if (a === 'map') session.act('map', b.dataset.map);
     else if (a === 'team') session.act('team', +b.dataset.team);
     else if (a === 'shuffle') session.act('shuffle');
     else if (a === 'chaos') session.act('chaos', !snap.chaos);
+    else if (a === 'bot') session.act('bot');
+    else if (a === 'unbot') session.act('unbot', b.dataset.id);
     else if (a === 'power') Game.pressPower(+b.dataset.slot);
     else if (a === 'leave') toMenu();
     else if (a === 'mute') b.textContent = Sound.toggle() ? '🔇' : '🔊';
@@ -1133,14 +1249,19 @@ const Net = (() => {
     let drag = null;                 // { chain: [city idx], x, y, target } in map units
     const fx = [];                   // capture rings
     const R = { L: 26, M: 22, S: 18 };
-    const cities = MAP.cities;
-    const IDX = {};
-    cities.forEach((c, i) => { IDX[c.id] = i; });
-    const sea = new Set((MAP.seaLinks || []).map(([a, b]) => [IDX[a], IDX[b]].sort().join(',')));
+    let cities = [], IDX = {}, sea = new Set();
+    function loadMap() {
+      cities = MAP.cities;
+      IDX = {};
+      cities.forEach((c, i) => { IDX[c.id] = i; });
+      sea = new Set((MAP.seaLinks || []).map(([a, b]) => [IDX[a], IDX[b]].sort().join(',')));
+      for (const k of Object.keys(sweep)) delete sweep[k];
+    }
     const meIdx = () => { const p = snap && snap.players.find(q => q.id === session.me); return p ? p.idx : -2; };
     const meP = () => snap && snap.players.find(q => q.id === session.me);
 
     function build() {
+      loadMap();
       $app.innerHTML = `<div class="game">
         <div class="topbar"><span class="timer">0:00</span><button class="ghost" data-act="mute" style="min-height:32px;padding:0 4px;font-size:18px">${Sound.muted ? '🔇' : '🔊'}</button><div class="chips"></div></div>
         <div class="board"><canvas></canvas><div class="chaosbar"></div><div class="powers"></div><div class="news"></div><div class="toast"></div></div>
@@ -1263,7 +1384,8 @@ const Net = (() => {
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
       c.fillStyle = '#9fcfe3'; c.fillRect(0, 0, W, H);
       c.lineJoin = 'round';
-      for (const p of MAP.ireland) { poly(c, p); c.fillStyle = '#e4e2d2'; c.fill(); }
+      // Land that's not in play (Ireland; Wales and Scotland on the England map) in a quieter colour.
+      for (const p of [...(MAP.ireland || []), ...(MAP.foreign || [])]) { poly(c, p); c.fillStyle = '#e4e2d2'; c.fill(); }
       for (const p of landPolys()) {
         poly(c, p); c.fillStyle = '#f3ecd3'; c.fill();
         c.strokeStyle = 'rgba(31,42,51,0.25)'; c.lineWidth = 1.5; c.stroke();
@@ -1475,8 +1597,10 @@ const Net = (() => {
       const me = meIdx();
       const chips = s.players.map(p => `<span class="chip ${p.id === session.me ? 'me' : ''} ${p.out ? 'out' : ''} ${p.connected ? '' : 'away'}" style="color:${colourOf(p.idx)}" title="${esc(p.name)}">
         <span class="dot" style="background:${colourOf(p.idx)}">${shapeOf(p.idx)}</span><span style="color:var(--ink)">${p.cities}</span></span>`).join('');
+      const watching = !s.players.some(p => p.id === session.me);
       const $chips = G.el.querySelector('.chips');
-      if ($chips.dataset.h !== chips) { $chips.innerHTML = chips; $chips.dataset.h = chips; }
+      const allChips = (watching ? '<span class="chip" style="color:var(--ink)">👀 Watching</span>' : '') + chips;
+      if ($chips.dataset.h !== allChips) { $chips.innerHTML = allChips; $chips.dataset.h = allChips; }
       // Counts down to the time limit; turns orange once overtime production kicks in.
       const sec = Math.max(0, Math.ceil((s.end - s.t) / 1000));
       const $timer = G.el.querySelector('.timer');
@@ -1551,7 +1675,7 @@ const Net = (() => {
     const AWARDS = {
       taken: { ico: '🏴', title: 'Most Cities Taken', say: v => `${v} captured` },
       comeback: { ico: '📈', title: 'Biggest Comeback', say: v => `climbed back ${v} cities` },
-      prize: { ico: '🏙️', title: `Baron of ${(cities.find(c => c.id === MAP.prizeCity) || {}).name || 'the Midlands'}`, say: v => `held it for ${v}s` },
+      prize: { ico: '🏙️', title: () => `Baron of ${(cities.find(c => c.id === MAP.prizeCity) || {}).name || 'the Midlands'}`, say: v => `held it for ${v}s` },
       upgrades: { ico: '🏗️', title: 'Planning Permission', say: v => `${v} upgrades` },
       gifted: { ico: '🤝', title: 'Top Teammate', say: v => `sent ${v} troops to their mate` },
       betrayer: { ico: '🐍', title: 'Betrayer', say: () => 'left their teammate to it' },
@@ -1561,9 +1685,9 @@ const Net = (() => {
       if (!list.length) return '';
       return `<div class="awards">${list.map((a, k) => {
         const p = s.players.find(q => q.idx === a.o) || { name: '?', colour: CONFIG.neutralColour, idx: 0 };
-        const A = AWARDS[a.k];
+        const A = AWARDS[a.k], title = typeof A.title === 'function' ? A.title() : A.title;
         return `<div class="award" style="animation-delay:${0.3 + k * 0.35}s"><span class="ico">${A.ico}</span>
-          <div><b>${A.title}</b><span class="who"><span class="dot" style="display:inline-grid;width:16px;height:16px;font-size:9px;vertical-align:-3px;background:${p.colour}">${shapeOf(p.idx)}</span> ${esc(p.name)}, ${A.say(a.v)}</span></div></div>`;
+          <div><b>${title}</b><span class="who"><span class="dot" style="display:inline-grid;width:16px;height:16px;font-size:9px;vertical-align:-3px;background:${p.colour}">${shapeOf(p.idx)}</span> ${esc(p.name)}, ${A.say(a.v)}</span></div></div>`;
       }).join('')}</div>`;
     }
     function endScreen(s) {

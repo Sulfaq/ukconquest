@@ -35,13 +35,15 @@ test('map: every link names real cities, the graph is connected, Belfast only by
   for (const s of MAP.slots) for (const c of s.cities) assert(c in I, c);
 });
 
-test('lobby: fifth player refused, no joining mid-match, rejoin allowed', () => {
+test('lobby: a fifth player and anyone joining mid-match watch instead; rejoin allowed', () => {
   const g = Sim.createGame();
   for (const n of ['a', 'b', 'c', 'd']) assert(Sim.addPlayer(g, n, n).ok);
-  assert.strictEqual(Sim.addPlayer(g, 'e', 'e').err, 'full');
+  assert(Sim.addPlayer(g, 'e', 'e').spectator, 'room full');
   assert(Sim.start(g));
-  assert.strictEqual(Sim.addPlayer(g, 'e', 'e').err, 'started');
-  assert(Sim.addPlayer(g, 'a', 'a').ok);
+  assert(Sim.addPlayer(g, 'f', 'f').spectator, 'match on');
+  assert(!g.players.e && !g.players.f);
+  assert(Sim.addPlayer(g, 'a', 'a').ok && !Sim.addPlayer(g, 'a', 'a').spectator);
+  assert.strictEqual(Sim.snapshot(g).watchers.length, 2);
 });
 
 test('start: four different corners, three cities each, rest neutral', () => {
@@ -553,6 +555,74 @@ test('captures say how big the beaten garrison was, for the shake', () => {
   let cap = null;
   until(g, () => (cap = g.events.find(e => e.k === 'cap')));
   assert(cap.lost >= 25);
+});
+
+// ---- M8: bots, spectators, more maps ----
+test('bots: the host can add them to empty seats and remove them, lobby only', () => {
+  const g = Sim.createGame();
+  Sim.addPlayer(g, 'amy', 'amy');
+  for (let k = 0; k < 5; k++) Sim.addBot(g);
+  assert.strictEqual(Object.keys(g.players).length, CONFIG.maxPlayers, 'stops at four');
+  const bots = Object.values(g.players).filter(p => p.bot);
+  assert.strictEqual(bots.length, 3);
+  assert.strictEqual(new Set(bots.map(b => b.name)).size, 3, 'different names');
+  assert(!Sim.removeBot(g, 'amy'), 'only bots');
+  assert(Sim.removeBot(g, bots[0].id));
+  Sim.start(g);
+  assert(!Sim.addBot(g) && !Sim.removeBot(g, bots[1].id), 'not mid-match');
+  assert(Sim.snapshot(g).players.some(p => p.bot));
+});
+
+test('bots: four bots play a whole match on their own and it ends', () => {
+  const g = Sim.createGame();
+  for (let k = 0; k < 4; k++) Sim.addBot(g);
+  Sim.start(g);
+  let sends = 0;
+  while (g.phase === 'play') { const before = g.nextFleet; Sim.step(g); sends += g.nextFleet - before; }
+  assert.strictEqual(g.phase, 'over');
+  assert(sends > 50, sends + ' sends');
+});
+
+test('spectators: watchers take free seats when the room goes back to the lobby', () => {
+  const g = Sim.createGame();
+  for (const n of ['a', 'b', 'c']) Sim.addPlayer(g, n, n);
+  Sim.start(g);
+  Sim.addPlayer(g, 'w', 'w');
+  assert(Sim.addPlayer(g, 'w', 'w').spectator, 'still watching on rejoin');
+  assert(!Sim.send(g, 'w', [0], 1));
+  Sim.setConnected(g, 'c', false);
+  Sim.toLobby(g);
+  assert(g.players.w, 'promoted');
+  assert(!g.spectators.w);
+  const h = Sim.createGame();
+  Sim.start(h);
+  Sim.addPlayer(h, 'x', 'x');
+  assert(Sim.setConnected(h, 'x', false));
+  assert(!h.spectators.x, 'a watcher who leaves is forgotten');
+});
+
+test('maps: the host picks England in the lobby and the match uses it', () => {
+  const ENG = JSON.parse(block('map-england'));
+  Sim.setMap(ENG); Sim.setMap(MAP);   // register both, stay on the UK
+  try {
+    const g = Sim.createGame();
+    Sim.addPlayer(g, 'a', 'a'); Sim.addPlayer(g, 'b', 'b');
+    assert(Sim.setMapChoice(g, 'england'));
+    assert(!Sim.setMapChoice(g, 'narnia'));
+    Sim.start(g);
+    assert.strictEqual(g.cities.length, ENG.cities.length);
+    assert.strictEqual(Sim.snapshot(g).map, 'england');
+    assert.strictEqual(Sim.snapshot(g).maps.length, 2);
+    run(g, 5000);
+    // England is connected, every city is on English land, and the start corners are real cities.
+    const E = Object.fromEntries(ENG.cities.map((c, i) => [c.id, i]));
+    const seen = new Set([0]), q = [0];
+    while (q.length) for (const v of Sim.adj(q.shift())) if (!seen.has(v)) { seen.add(v); q.push(v); }
+    assert.strictEqual(seen.size, ENG.cities.length);
+    const inside = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+    for (const c of ENG.cities) assert(inside(c.x, c.y, ENG.land[0]), c.id + ' is not in England');
+    for (const s of ENG.slots) for (const c of s.cities) assert(c in E, c);
+  } finally { Sim.setMap(MAP); }
 });
 
 console.log(`\n${passed} passed`);

@@ -8,32 +8,16 @@ const vm = require('vm');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const block = id => html.match(new RegExp(`<script[^>]*id="${id}">([\\s\\S]*?)</script>`))[1];
 const { Sim, CONFIG } = vm.runInNewContext(block('config') + block('sim') + '\n;({ Sim, CONFIG })', {});
-const MAP = JSON.parse(block('map-uk'));
+// MAP=england node tools/balance.js runs another map from maps/.
+const MAP = process.env.MAP ? JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'maps', process.env.MAP + '.json'), 'utf8')) : JSON.parse(block('map-uk'));
 Sim.setMap(MAP);
 const GAMES = +process.argv[2] || 300;
 
 let seed = 1;
 const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-// A simple greedy bot: attack the weakest beatable neighbour, push spare troops to the front, upgrade when safe.
-function think(g, p) {
-  const ally = o => Sim.allied(g, o, p.idx);
-  const mine = g.cities.map((c, i) => i).filter(i => g.cities[i].o === p.idx);
-  for (const s of mine) {
-    const c = g.cities[s];
-    const foes = Sim.adj(s).filter(j => !ally(g.cities[j].o));
-    const hit = foes.filter(j => Math.floor(c.n / 2) > g.cities[j].n * CONFIG.defenderBonus + 2)
-      .sort((a, b) => g.cities[a].n - g.cities[b].n)[0];
-    if (hit !== undefined && rand() < 0.7) { Sim.send(g, p.id, [s], hit); continue; }
-    const enemiesNear = foes.some(j => g.cities[j].o >= 0);
-    const cost = CONFIG.upgradeCost[(c.lv || 1) + 1];
-    if (cost && !enemiesNear && c.n > cost + 10 && rand() < 0.3) { Sim.upgrade(g, p.id, s); continue; }
-    if (!foes.length && c.n > 20) {
-      const front = Sim.adj(s).filter(j => ally(g.cities[j].o) && Sim.adj(j).some(k => !ally(g.cities[k].o)));
-      if (front.length) Sim.send(g, p.id, [s], front[Math.floor(rand() * front.length)]);
-    }
-  }
-}
+// The same bot the game uses to fill empty seats.
+const think = (g, p) => Sim.botThink(g, p, rand);
 
 function play(mode) {
   const g = Sim.createGame();

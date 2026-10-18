@@ -10,6 +10,7 @@ const htmlPath = path.join(root, 'index.html');
 const read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const BLOCKS = {
   peerjs: () => `<script>${read('vendor/peerjs-1.5.5.min.js').replace(/\n?\/\/# sourceMappingURL=.*$/m, '').trim()}</script>`,
+  'map-england': () => `<script type="application/json" id="map-england">${JSON.stringify(JSON.parse(read('maps/england.json')))}</script>`,
   'map-uk': () => `<script type="application/json" id="map-uk">${JSON.stringify(JSON.parse(read('maps/uk.json')))}</script>`,
 };
 

@@ -3,6 +3,8 @@
 A real-time conquest game for 2 to 4 mates on a map of the UK. Drag troops between cities, take the lot.
 
 **Play:** open the page, start a room, and send friends the invite link (or the 4-letter code).
+Short of mates? The host can add bots. Anyone who joins a full room, or one mid-match, watches and gets a seat next match.
+Two maps: the whole United Kingdom, or a zoomed-in England.
 
 ## Controls
 
@@ -18,8 +20,9 @@ A real-time conquest game for 2 to 4 mates on a map of the UK. Drag troops betwe
 - Host-authoritative multiplayer over WebRTC via [PeerJS](https://peerjs.com) (MIT), the same setup as Hob Mob:
   the host's browser runs the simulation at 10 Hz, everyone else only sends intents.
 - `CONFIG` at the top of `index.html` holds every tuning knob.
-- `maps/uk.json` holds city positions, sizes, links and start slots. Edit it, then run `node tools/inline.js`.
+- `maps/uk.json` and `maps/england.json` hold city positions, sizes, links and start slots. Edit it, then run `node tools/inline.js`.
   (`tools/build-map.js` generated the first version from latitude and longitude; it won't overwrite the hand-tuned file without `--force`.)
 - Tests: `node tests/sim.test.js`
 - Balance: `node tools/balance.js [games]` plays bot-v-bot matches and reports win rates per start corner.
+  `MAP=england node tools/balance.js` checks the England map. `tools/coast.js` holds the shared coastlines.
   `node tools/build-map.js --outline` redraws the coastline and islands without touching cities or links.
