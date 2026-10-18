@@ -508,4 +508,51 @@ test('power-ups: bad slots and junk do nothing', () => {
   assert.strictEqual(g.players.amy.powers.length, 1);
 });
 
+// ---- M7: awards ----
+const awardOf = (g, k) => (g.awards || []).find(a => a.k === k);
+test('awards: most cities taken, the Birmingham baron, and nothing for doing nothing', () => {
+  const g = game(2);
+  g.cities[I.birmingham].o = 1;
+  run(g, 30000);
+  g.players.amy.stats.taken = 4; g.players.ben.stats.taken = 2;
+  for (const c of g.cities) if (c.o === 1) c.o = 0;
+  Sim.step(g);
+  assert.strictEqual(g.phase, 'over');
+  assert.strictEqual(awardOf(g, 'taken').o, 0);
+  assert.strictEqual(awardOf(g, 'prize').o, 1, 'ben held Birmingham for 30s');
+  assert(!awardOf(g, 'comeback'), 'no comeback happened');
+  assert(!awardOf(g, 'betrayer'), 'not a team game');
+  assert(Sim.snapshot(g).awards.length >= 2);
+});
+
+test('awards: biggest comeback needs a real climb back', () => {
+  const g = game(2);
+  g.players.ben.stats.low = 1;
+  for (const id of ['leeds', 'sheffield', 'york', 'hull']) g.cities[I[id]].o = 1;
+  Sim.step(g);
+  for (const c of g.cities) if (c.o === 0) c.o = 1;
+  Sim.step(g);
+  assert.strictEqual(awardOf(g, 'comeback').o, 1);
+});
+
+test('awards: a 2 v 2 player who walks out on their teammate is the Betrayer', () => {
+  const g = teamGame();
+  Sim.start(g);
+  Sim.setConnected(g, 'amy', false);
+  const amyTeam = g.players.amy.team;
+  const winner = Object.values(g.players).find(p => p.team === amyTeam && p.id !== 'amy').idx;
+  for (const c of g.cities) if (c.o >= 0) c.o = winner;
+  Sim.step(g);
+  assert.strictEqual(awardOf(g, 'betrayer').o, g.players.amy.idx);
+});
+
+test('captures say how big the beaten garrison was, for the shake', () => {
+  const g = game();
+  g.cities[I.london].n = 80; g.cities[I.oxford].n = 25;
+  Sim.send(g, 'amy', [I.london], I.oxford);
+  let cap = null;
+  until(g, () => (cap = g.events.find(e => e.k === 'cap')));
+  assert(cap.lost >= 25);
+});
+
 console.log(`\n${passed} passed`);

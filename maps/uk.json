@@ -3,6 +3,7 @@
  "name": "United Kingdom",
  "territories": true,
  "southLine": 680,
+ "prizeCity": "birmingham",
  "width": 600,
  "height": 899,
  "land": [
