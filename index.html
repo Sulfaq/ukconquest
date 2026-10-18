@@ -94,7 +94,7 @@ input.code { text-transform: uppercase; letter-spacing: 6px; text-align: center;
 <script id="config">
 'use strict';
 const CONFIG = {
-  version: '0.2',
+  version: '0.3',
   maxPlayers: 4,
   minPlayers: 2,              // the host can still start alone for a practice run
   modes: { ffa: 'Free for all', teams: '2 v 2' },
@@ -107,6 +107,10 @@ const CONFIG = {
   travelSpeed: 40,            // map units per second along links (a long link is about 4 seconds)
   production: { L: 1.0, M: 0.6, S: 0.35 },   // troops per second at level 1
   cap: { L: 60, M: 50, S: 40 },              // troop cap at level 1 (production stops here)
+  maxLevel: 3,
+  upgradeCost: [0, 0, 20, 40],               // troops from the city's garrison to reach level 2, 3
+  levelProduction: [0, 1, 1.5, 2],           // production multiplier by level
+  levelCap: [0, 1, 5 / 3, 2.5],              // cap multiplier by level (60 / 100 / 150 for a large city)
   startGarrison: 20,          // each player's own starting cities
   neutralGarrison: { L: 30, M: 18, S: 10 },
   dropGraceSeconds: 60,       // a disconnected player's cities keep producing this long, then freeze
@@ -243,11 +247,11 @@ const Sim = (() => {
       const next = [0, 0];
       for (const p of ps) p.slot = halves[p.team][next[p.team]++];
     } else ps.forEach((p, k) => { p.slot = slots[k]; });
-    g.cities = MAP.cities.map(c => ({ o: -1, n: CONFIG.neutralGarrison[c.size] }));
+    g.cities = MAP.cities.map(c => ({ o: -1, n: CONFIG.neutralGarrison[c.size], lv: 1 }));
     for (const p of ps) {
       p.out = false;
-      p.stats = { taken: 0, lost: 0, sent: 0, peak: 3, gifted: 0, low: 3, comeback: 0 };
-      for (const cid of MAP.slots[p.slot].cities) g.cities[IDX[cid]] = { o: p.idx, n: CONFIG.startGarrison };
+      p.stats = { taken: 0, lost: 0, sent: 0, upgrades: 0, peak: 3, gifted: 0, low: 3, comeback: 0 };
+      for (const cid of MAP.slots[p.slot].cities) g.cities[IDX[cid]] = { o: p.idx, n: CONFIG.startGarrison, lv: 1 };
     }
     g.phase = 'play'; g.t = 0; g.fleets = []; g.events = []; g.winner = null; g.winTeam = null; g.endReason = null; g.startN = ps.length;
     return true;
@@ -275,6 +279,31 @@ const Sim = (() => {
   }
 
   // Intent: send half of each source city's garrison to `to`. Returns true if anything was sent.
+  // Captured cities keep their level, so upgraded cities are worth taking.
+  function cityCap(g, i) { return CONFIG.cap[MAP.cities[i].size] * CONFIG.levelCap[g.cities[i].lv || 1]; }
+
+  // Intent: upgrade one of your cities, paid for with troops from its own garrison (at least one stays behind).
+  function upgradeProblem(g, id, ci) {
+    const p = g.players[id];
+    ci = Number(ci);
+    if (g.phase !== 'play' || !p || p.out || !Number.isInteger(ci) || !g.cities[ci]) return 'no';
+    const c = g.cities[ci];
+    if (c.o !== p.idx) return 'not yours';
+    if ((c.lv || 1) >= CONFIG.maxLevel) return 'max';
+    const cost = CONFIG.upgradeCost[(c.lv || 1) + 1];
+    if (Math.floor(c.n) < cost + 1) return 'troops';
+    return '';
+  }
+  function upgrade(g, id, ci) {
+    if (upgradeProblem(g, id, ci)) return false;
+    const c = g.cities[ci], p = g.players[id];
+    c.lv = (c.lv || 1) + 1;
+    c.n -= CONFIG.upgradeCost[c.lv];
+    p.stats.upgrades++;
+    event(g, { k: 'up', c: ci, o: p.idx, lv: c.lv });
+    return true;
+  }
+
   function send(g, id, from, to) {
     const p = g.players[id];
     if (g.phase !== 'play' || !p || p.out || !Array.isArray(from)) return false;
@@ -341,8 +370,8 @@ const Sim = (() => {
       if (c.o < 0) return;
       const p = own[c.o];
       if (!p || frozen(g, p)) return;
-      const cap = CONFIG.cap[m.size];
-      if (c.n < cap) c.n = Math.min(cap, c.n + CONFIG.production[m.size] * boost * dt);
+      const cap = cityCap(g, i);
+      if (c.n < cap) c.n = Math.min(cap, c.n + CONFIG.production[m.size] * CONFIG.levelProduction[c.lv || 1] * boost * dt);
     });
     // Arrivals resolve in arrival order.
     const landed = g.fleets.filter(f => f.t1 <= g.t).sort((a, b) => a.t1 - b.t1 || a.id - b.id);
@@ -432,13 +461,13 @@ const Sim = (() => {
         id: p.id, name: p.name, idx: p.idx, team: p.team, colour: colourOf(g, p), connected: p.connected, frozen: frozen(g, p), out: !!p.out,
         cities: owned[p.idx] || 0, stats: g.phase === 'over' ? p.stats : undefined,
       })),
-      c: g.cities.map(c => [c.o, Math.floor(c.n)]),
+      c: g.cities.map(c => [c.o, Math.floor(c.n), c.lv || 1]),
       f: g.fleets.map(f => [f.id, f.o, f.n, f.t0, f.t1, f.path]),
       ev: g.events.map(e => Object.assign({}, e)),
     };
   }
 
-  return { setMap, map, adj, linkLen, route, createGame, addPlayer, setConnected, setMode, setTeam, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
+  return { setMap, map, adj, linkLen, route, createGame, addPlayer, setConnected, setMode, setTeam, upgrade, upgradeProblem, cityCap, shuffleTeams, startProblem, canStart, start, send, step, toLobby, rematch, snapshot, frozen, allied };
 })();
 </script>
 
@@ -624,6 +653,7 @@ const Net = (() => {
       if (Sim.setConnected(game, id, true)) broadcast();
       if (msg.t === 'send' && Sim.send(game, id, msg.from, msg.to)) broadcast();
       else if (msg.t === 'team' && Sim.setTeam(game, id, msg.team)) broadcast();
+      else if (msg.t === 'up' && Sim.upgrade(game, id, msg.c)) broadcast();
     }
 
     function onClose(conn) {
@@ -666,6 +696,7 @@ const Net = (() => {
       else if (type === 'rematch') ok = Sim.rematch(game);
       else if (type === 'mode') ok = Sim.setMode(game, data);
       else if (type === 'team') ok = Sim.setTeam(game, meId, data);
+      else if (type === 'upgrade') ok = Sim.upgrade(game, meId, data);
       else if (type === 'shuffle') ok = Sim.shuffleTeams(game);
       if (ok) broadcast();
     }
@@ -718,6 +749,7 @@ const Net = (() => {
       if (!conn || !conn.open) return;
       if (type === 'send') conn.send({ t: 'send', from: data.from, to: data.to });
       else if (type === 'team') conn.send({ t: 'team', team: data });
+      else if (type === 'upgrade') conn.send({ t: 'up', c: data });
     }
     banner(`Joining ${code}…`);
     connect();
@@ -873,6 +905,7 @@ const Net = (() => {
     }
     const SOUNDS = {
       send: () => tone(520, 0.08, 'triangle', 760),
+      upgrade: () => [440, 554, 659].forEach((f, i) => setTimeout(() => tone(f, 0.09, 'triangle', 0, 0.09), i * 60)),
       capture: () => { tone(660, 0.1, 'square', 0, 0.06); setTimeout(() => tone(990, 0.14, 'square', 0, 0.06), 90); },
       lost: () => tone(300, 0.3, 'sawtooth', 120, 0.07),
       win: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.2, 'triangle'), i * 120)),
@@ -988,12 +1021,22 @@ const Net = (() => {
       const pt = toMap(e), i = hit(pt);
       if (i < 0 || !mine(i)) return;
       try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic or already released */ }
-      drag = { chain: [i], x: pt.x, y: pt.y, target: -1 };
+      drag = { chain: [i], x: pt.x, y: pt.y, target: -1, sx: e.clientX, sy: e.clientY, at: performance.now(), wandered: false };
+    }
+    // A quick tap on your own city (no drag) upgrades it.
+    function tapUpgrade(i) {
+      const [, n, lv] = snap.c[i];
+      if (lv >= CONFIG.maxLevel) { toast(`${cities[i].name} is already max level`); return; }
+      const cost = CONFIG.upgradeCost[lv + 1];
+      if (n < cost + 1) { toast(`Level ${lv + 1} costs ${cost} troops (and one stays behind)`); return; }
+      session.act('upgrade', i);
+      Sound.play('upgrade'); buzz(20);
     }
     function move(e) {
       if (!drag) return;
       const pt = toMap(e);
       drag.x = pt.x; drag.y = pt.y;
+      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 12) drag.wandered = true;
       const i = hit(pt);
       if (i >= 0 && mine(i) && !drag.chain.includes(i)) drag.chain.push(i);
       drag.target = i;
@@ -1001,6 +1044,12 @@ const Net = (() => {
     function up(e) {
       if (!drag) return;
       move(e);
+      if (!drag.wandered && drag.chain.length === 1 && performance.now() - drag.at < 500) {
+        const i = drag.chain[0];
+        drag = null;
+        tapUpgrade(i);
+        return;
+      }
       const to = drag.target, from = drag.chain.filter(i => i !== to);
       drag = null;
       if (to < 0 || !from.length || !reachable(from).has(to)) return;
@@ -1062,6 +1111,10 @@ const Net = (() => {
             if (fx.length > 12) fx.shift();
             if (e.o === me) { Sound.play('capture'); buzz(30); }
             else if (e.was === me) { Sound.play('lost'); buzz([60, 40, 60]); }
+          } else if (e.k === 'up') {   // everyone sees an upgrade happen
+            const c = cities[e.c];
+            fx.push({ x: c.x, y: c.y, colour: '#ffffff', at: performance.now() });
+            if (fx.length > 12) fx.shift();
           } else if (e.k === 'out' && e.o === me) toast("You've been wiped off the map");
           else if (e.k === 'ot') { toast(`Overtime: production ×${CONFIG.overtimeBoost}`); Sound.play('send'); buzz(40); }
         }
@@ -1100,13 +1153,13 @@ const Net = (() => {
         .map(q => {
           const st = q.stats || {};
           return `<tr><td><span class="who"><span class="dot" style="background:${q.colour}">${shapeOf(q.idx)}</span>${esc(q.name)}${isWin(q) ? ' 👑' : ''}</span></td>
-            <td>${q.cities}</td><td>${st.taken || 0}</td><td>${st.lost || 0}</td><td>${st.peak || 0}</td><td>${st.sent || 0}</td></tr>`;
+            <td>${q.cities}</td><td>${st.taken || 0}</td><td>${st.lost || 0}</td><td>${st.peak || 0}</td><td>${st.upgrades || 0}</td><td>${st.sent || 0}</td></tr>`;
         }).join('');
       const t = Math.round(s.t / 1000);
       return `<div class="overlay"><div class="box">
         <h2>${title}</h2>
         <p class="muted small">${sub} ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')} played.</p>
-        <table class="stats"><tr><th></th><th>Now</th><th>Taken</th><th>Lost</th><th>Peak</th><th>Sent</th></tr>${rows}</table>
+        <table class="stats"><tr><th></th><th>Now</th><th>Taken</th><th>Lost</th><th>Peak</th><th>Upgr.</th><th>Sent</th></tr>${rows}</table>
         ${session.isHost
           ? '<button class="primary" data-act="rematch">Rematch</button><button data-act="lobby">Back to the lobby</button>'
           : '<p class="muted small">Waiting for the host to call a rematch…</p>'}
@@ -1179,7 +1232,7 @@ const Net = (() => {
       // Cities.
       const numFont = s => `900 ${Math.round(s)}px system-ui, sans-serif`;
       cities.forEach((m, i) => {
-        const [o, n] = snap.c[i] || [-1, 0];
+        const [o, n, lv = 1] = snap.c[i] || [-1, 0, 1];
         const x = sx(m.x), y = sy(m.y), r = R[m.size] * scale;
         if (valid && valid.has(i)) {
           c.beginPath(); c.arc(x, y, r + 6, 0, Math.PI * 2);
@@ -1197,6 +1250,13 @@ const Net = (() => {
         if (o >= 0) {   // owner's shape, as a backup to colour
           c.font = `${Math.max(8, Math.round(r * 0.42))}px system-ui, sans-serif`;
           c.fillText(shapeOf(o), x, y - r * 0.68);
+        }
+        if (lv > 1) {   // level pips along the bottom of the circle
+          const pr = Math.max(2, r * 0.11), gap = pr * 2.8;
+          for (let k = 0; k < lv; k++) {
+            c.beginPath(); c.arc(x + (k - (lv - 1) / 2) * gap, y + r * 0.7, pr, 0, Math.PI * 2);
+            c.fillStyle = '#fff'; c.fill();
+          }
         }
         c.font = `700 ${Math.max(9, Math.round(11 * scale + 3))}px system-ui, sans-serif`;
         c.textBaseline = 'top';

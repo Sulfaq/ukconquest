@@ -300,7 +300,61 @@ test('end screen stats count captures, troops sent and peak cities', () => {
   assert.strictEqual(g.players.amy.stats.sent, 30);
   assert.strictEqual(g.players.amy.stats.peak, 4);
   Sim.step(g); g.phase = 'over';
+  assert.strictEqual(Sim.snapshot(g).c[I.london][2], 1, 'snapshot carries the level');
   assert(Sim.snapshot(g).players[0].stats, 'stats only travel at the end');
+});
+
+
+// ---- M3: upgrades ----
+test('upgrade: costs troops from the garrison, one level at a time, up to level 3', () => {
+  const g = game();
+  g.cities[I.london].n = 20;
+  assert.strictEqual(Sim.upgradeProblem(g, 'amy', I.london), 'troops', '20 troops cannot pay 20 and keep one');
+  g.cities[I.london].n = 21;
+  assert(Sim.upgrade(g, 'amy', I.london));
+  assert.strictEqual(g.cities[I.london].lv, 2);
+  assert.strictEqual(g.cities[I.london].n, 1);
+  g.cities[I.london].n = 50;
+  assert(Sim.upgrade(g, 'amy', I.london));
+  assert.strictEqual(g.cities[I.london].lv, 3);
+  assert.strictEqual(g.cities[I.london].n, 10);
+  g.cities[I.london].n = 100;
+  assert.strictEqual(Sim.upgradeProblem(g, 'amy', I.london), 'max');
+  assert(!Sim.upgrade(g, 'amy', I.london));
+  assert.strictEqual(g.players.amy.stats.upgrades, 2);
+});
+
+test('upgrade: only your own cities, only while playing', () => {
+  const g = game();
+  for (const c of g.cities) c.n = 60;
+  assert(!Sim.upgrade(g, 'amy', I.manchester), "ben's city");
+  assert(!Sim.upgrade(g, 'amy', I.birmingham), 'neutral');
+  assert(!Sim.upgrade(g, 'zed', I.london));
+  assert(!Sim.upgrade(g, 'amy', 'london'));
+  g.phase = 'over';
+  assert(!Sim.upgrade(g, 'amy', I.london));
+});
+
+test('levels raise production and the cap (60 / 100 / 150 for a large city)', () => {
+  const g = game();
+  g.cities[I.london] = { o: 0, n: 10, lv: 2 };
+  run(g, 1000);
+  assert(Math.abs(g.cities[I.london].n - (10 + CONFIG.production.L * 1.5)) < 0.01);
+  run(g, 300000);
+  assert(Math.abs(g.cities[I.london].n - 100) < 0.01);
+  g.cities[I.london].lv = 3;
+  run(g, 300000);
+  assert(Math.abs(g.cities[I.london].n - 150) < 0.01);
+});
+
+test('a captured city keeps its level', () => {
+  const g = game();
+  g.cities[I.oxford] = { o: -1, n: 1, lv: 3 };
+  g.cities[I.london].n = 40;
+  Sim.send(g, 'amy', [I.london], I.oxford);
+  until(g, () => g.fleets.length === 0);
+  assert.strictEqual(g.cities[I.oxford].o, 0);
+  assert.strictEqual(g.cities[I.oxford].lv, 3);
 });
 
 console.log(`\n${passed} passed`);
